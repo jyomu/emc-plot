@@ -48,6 +48,47 @@ const TABS = [
 
 type TabKey = typeof TABS[number]['key']
 
+function getMaxMAWindow(plotData: Partial<PlotData>[]): number {
+  const first = plotData[0]
+  if (
+    first &&
+    Array.isArray(first.x) &&
+    first.x.every(v => typeof v === 'number')
+  ) {
+    return first.x.length
+  }
+  return 1
+}
+
+function MovingAverageControl({ showMA, setShowMA, maWindow, setMaWindow, maxWindow }: {
+  showMA: boolean
+  setShowMA: (b: boolean) => void
+  maWindow: number
+  setMaWindow: (n: number) => void
+  maxWindow: number
+}) {
+  return (
+    <div style={{ margin: '12px 0' }}>
+      <label>
+        <input type="checkbox" checked={showMA} onChange={e => setShowMA(e.target.checked)} /> 移動平均を表示
+      </label>
+      {showMA && (
+        <span style={{ marginLeft: 12 }}>
+          ウィンドウサイズ:
+          <input
+            type="number"
+            min={1}
+            max={maxWindow}
+            value={maWindow}
+            onChange={e => setMaWindow(Number(e.target.value))}
+            style={{ width: 60, marginLeft: 4 }}
+          />
+        </span>
+      )}
+    </div>
+  )
+}
+
 export function SParamChart({ traces, format }: SParamChartProps) {
   const sParams = traces.map(t => typeof t.name === 'string' ? t.name : '').filter(Boolean)
   const [selected, setSelected] = useState<string[]>(sParams.slice(0, 1))
@@ -151,34 +192,13 @@ export function SParamChart({ traces, format }: SParamChartProps) {
     <>
       <SParamSelector traces={traces} selected={selected} onChange={s => setSelected(prev => prev.includes(s) ? prev.filter(x => x !== s) : [...prev, s])} />
       {activeTab === 'raw' && (
-        <div style={{ margin: '12px 0' }}>
-          <label>
-            <input type="checkbox" checked={showMA} onChange={e => setShowMA(e.target.checked)} /> 移動平均を表示
-          </label>
-          {showMA && (
-            <span style={{ marginLeft: 12 }}>
-              ウィンドウサイズ:
-              <input
-                type="number"
-                min={1}
-                max={(() => {
-                  const first = plotData[0]
-                  if (
-                    first &&
-                    Array.isArray(first.x) &&
-                    first.x.every(v => typeof v === 'number')
-                  ) {
-                    return first.x.length
-                  }
-                  return 1
-                })()}
-                value={maWindow}
-                onChange={e => setMaWindow(Number(e.target.value))}
-                style={{ width: 60, marginLeft: 4 }}
-              />
-            </span>
-          )}
-        </div>
+        <MovingAverageControl
+          showMA={showMA}
+          setShowMA={setShowMA}
+          maWindow={maWindow}
+          setMaWindow={setMaWindow}
+          maxWindow={getMaxMAWindow(plotData)}
+        />
       )}
       <div style={{ margin: '12px 0' }}>
         {TABS.map(tab => (
