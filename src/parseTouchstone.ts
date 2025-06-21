@@ -72,14 +72,8 @@ function buildSParams(nPorts: number): string[] {
 }
 
 export async function parseTouchstone(file: File): Promise<TouchstoneData & { traces: Partial<ScatterData>[] }> {
-  // ファイル読み込み
-  const text: string = await new Promise((resolve, reject) => {
-    const reader = new FileReader()
-    // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
-    reader.onload = () => resolve(reader.result as string)
-    reader.onerror = () => reject(reader.error)
-    reader.readAsText(file)
-  })
+  // FileReaderを使わず、readAsTextでファイル読み込み
+  const text: string = await file.text();
   const filename = file.name
   const lines = text.split(/\r?\n/)
 
