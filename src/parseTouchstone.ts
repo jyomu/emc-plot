@@ -79,7 +79,10 @@ export async function parseTouchstone(file: File): Promise<TouchstoneData & { tr
 
   // ヘッダ解析
   const { freqUnit, format: rawFormat, z0 } = parseHeader(lines)
-  const format = (rawFormat === 'DB' || rawFormat === 'MA' || rawFormat === 'RI') ? rawFormat : 'DB'
+  if (rawFormat !== 'DB' && rawFormat !== 'MA' && rawFormat !== 'RI') {
+    throw new Error(`Unexpected rawFormat value: ${rawFormat}. Expected 'DB', 'MA', or 'RI'.`)
+  }
+  const format = rawFormat
 
   // データ部抽出・数値配列化
   const dataLines = extractDataLines(lines)
