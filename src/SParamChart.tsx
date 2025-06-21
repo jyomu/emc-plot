@@ -1,16 +1,11 @@
 import { useState } from 'react'
 import Plot from 'react-plotly.js'
-import type { TouchstoneData, ChartRow } from './parseTouchstone'
-import { freqUnitOptions } from './freqUnit'
+import type { Data } from 'plotly.js'
+import type { TouchstoneData } from './parseTouchstone'
 
 export interface SParamChartProps {
-  touchstone: TouchstoneData
+  touchstone: TouchstoneData & { traces: Data[] }
 }
-
-const colors = [
-  '#8884d8', '#82ca9d', '#ff7300', '#ff0000', '#0088FE', '#00C49F', '#FFBB28', '#FF8042',
-  '#A28FD0', '#F67280', '#355C7D', '#6C5B7B', '#C06C84', '#F8B195', '#355C7D', '#99B898'
-]
 
 function movingAverage(arr: number[], windowSize: number): number[] {
   const result: number[] = []
@@ -23,22 +18,6 @@ function movingAverage(arr: number[], windowSize: number): number[] {
     result.push(windowSum / Math.min(windowSize, i + 1))
   }
   return result
-}
-
-function createMovingAverageData(chartData: ChartRow[], selected: string[], windowSize: number): ChartRow[] {
-  const movingAverageMap: Record<string, number[]> = {}
-  selected.forEach(s => {
-    const arr = chartData.map(d => d[s])
-    movingAverageMap[s] = movingAverage(arr, windowSize)
-  })
-  return chartData.map((row, i): ChartRow => {
-    const base: ChartRow = { freq: row.freq }
-    selected.forEach(s => {
-      base[s] = row[s]
-      base[s + '_MA'] = movingAverageMap[s][i]
-    })
-    return base
-  })
 }
 
 function SParamSelector({ sParams, selected, onChange }: { sParams: string[], selected: string[], onChange: (s: string) => void }) {
@@ -55,24 +34,6 @@ function SParamSelector({ sParams, selected, onChange }: { sParams: string[], se
           {s}
         </label>
       ))}
-    </div>
-  )
-}
-
-type FreqUnitOption = typeof freqUnitOptions[number]
-
-function FreqUnitSelector({ displayUnit, setDisplayUnit }: { displayUnit: FreqUnitOption, setDisplayUnit: (u: FreqUnitOption) => void }) {
-  return (
-    <div style={{ margin: '12px 0' }}>
-      <label>周波数単位: </label>
-      <select value={displayUnit.label} onChange={e => {
-        const unit = freqUnitOptions.find(u => u.label === e.target.value)
-        if (unit) setDisplayUnit(unit)
-      }}>
-        {freqUnitOptions.map(u => (
-          <option key={u.label} value={u.label}>{u.label}</option>
-        ))}
-      </select>
     </div>
   )
 }
@@ -102,55 +63,57 @@ function MovingAverageControl({ showMA, setShowMA, maWindow, setMaWindow, maxWin
 }
 
 export function SParamChart({ touchstone }: SParamChartProps) {
-  const { chartData, sParams, format, freqUnit } = touchstone
+  const { chartData, sParams, format, traces } = touchstone
   const [selected, setSelected] = useState<string[]>(sParams.slice(0, 1))
-  const defaultUnit = freqUnitOptions.find(u => u.label.toUpperCase() === freqUnit) || freqUnitOptions[0]
-  const [displayUnit, setDisplayUnit] = useState<FreqUnitOption>(defaultUnit)
   const [showMA, setShowMA] = useState(false)
   const [maWindow, setMaWindow] = useState(5)
 
   const yLabel = format === 'DB' ? 'Magnitude [dB]' : 'Magnitude'
-  const freqLabel = `Frequency [${displayUnit.label}]`
 
-  const maData = createMovingAverageData(chartData, selected, maWindow)
-  const plotData = (showMA ? maData : chartData)
-
-  // Plotly用データ生成
-  const traces: import('plotly.js').Data[] = []
-  selected.forEach((s, idx) => {
-    traces.push({
-      x: plotData.map(row => row.freq / displayUnit.value),
-      y: plotData.map(row => row[s]),
+  // x軸はHzのままtraceに渡す
+  let plotData: Data[] = traces.filter(t => t.type === 'scatter' && selected.includes(t.name as string))
+  plotData = plotData.map(t => {
+    if (t.type === 'scatter' && Array.isArray(t.x)) {
+      return {
+        ...t,
+        // x: (t.x as number[]).map(v => v / displayUnit.value), // ←Hzのまま
+        hovertemplate: `%{x:.2s}Hz<br>%{y:.3f} ${yLabel.replace(/.*\[(.*)\]/, '$1') || ''}<extra></extra>`
+      }
+    }
+    return t
+  })
+  if (showMA) {
+    const maTraces: Data[] = selected.map(s => ({
+      x: chartData.map(row => row.freq), // Hzのまま
+      y: movingAverage(chartData.map(row => row[s]), maWindow),
       type: 'scatter',
       mode: 'lines',
-      name: s + ' 振幅',
-      line: { color: colors[idx % colors.length] }
-    })
-    if (showMA) {
-      traces.push({
-        x: plotData.map(row => row.freq / displayUnit.value),
-        y: plotData.map(row => row[s + '_MA']),
-        type: 'scatter',
-        mode: 'lines',
-        name: s + ' 移動平均',
-        line: { color: colors[(idx + 8) % colors.length], dash: 'dash' }
-      })
-    }
-  })
+      name: s + ' 移動平均',
+      line: { dash: 'dash' },
+      hovertemplate: `%{x:.2s}Hz<br>%{y:.3f} ${yLabel.replace(/.*\[(.*)\]/, '$1') || ''}<extra></extra>`
+    }))
+    plotData = [...plotData, ...maTraces]
+  }
 
   return (
     <>
       <SParamSelector sParams={sParams} selected={selected} onChange={s => setSelected(prev => prev.includes(s) ? prev.filter(x => x !== s) : [...prev, s])} />
-      <FreqUnitSelector displayUnit={displayUnit} setDisplayUnit={setDisplayUnit} />
       <MovingAverageControl showMA={showMA} setShowMA={setShowMA} maWindow={maWindow} setMaWindow={setMaWindow} maxWindow={chartData.length} />
       {selected.length > 0 && (
         <Plot
-          data={traces}
+          data={plotData}
           layout={{
             autosize: true,
             height: 400,
-            xaxis: { title: { text: freqLabel } },
-            yaxis: { title: { text: yLabel } },
+            xaxis: {
+              title: { text: 'Frequency [Hz]' },
+              tickformat: '~s', // SI prefix自動スケール
+              ticksuffix: 'Hz',
+            },
+            yaxis: {
+              title: { text: yLabel },
+              tickformat: '.3f',
+            },
             legend: { orientation: 'h' },
             margin: { t: 30, l: 60, r: 30, b: 60 }
           }}
