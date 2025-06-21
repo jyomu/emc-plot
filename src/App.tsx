@@ -1,10 +1,11 @@
 import { useState } from 'react'
-import { parseTouchstone, type TouchstoneData } from './parseTouchstone'
+import { parseTouchstone } from './parseTouchstone'
 import { SParamChart } from './SParamChart'
 import './App.css'
 
 function App() {
-  const [touchstone, setTouchstone] = useState<TouchstoneData | null>(null)
+  const [traces, setTraces] = useState<Partial<import('plotly.js').ScatterData>[] | null>(null)
+  const [format, setFormat] = useState<string>('')
   const [error, setError] = useState<string | null>(null)
 
   return (
@@ -15,14 +16,15 @@ function App() {
         if (!file) return
         try {
           const parsed = await parseTouchstone(file)
-          setTouchstone(parsed)
+          setTraces(parsed.traces)
+          setFormat(parsed.format)
           setError(null)
         } catch (err) {
-          setError('パースエラー: ' + (err as Error).message)
+          setError('パースエラー: ' + (err instanceof Error ? err.message : String(err)))
         }
       }} />
-      {touchstone && (
-        <SParamChart touchstone={touchstone} />
+      {traces && (
+        <SParamChart traces={traces} format={format} />
       )}
       {error && <div style={{ color: 'red' }}>{error}</div>}
     </div>

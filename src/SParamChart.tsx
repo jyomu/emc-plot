@@ -1,10 +1,10 @@
 import { useState } from 'react'
 import Plot from 'react-plotly.js'
-import type { Data } from 'plotly.js'
-import type { TouchstoneData } from './parseTouchstone'
+import type { ScatterData, PlotData } from 'plotly.js'
 
 export interface SParamChartProps {
-  touchstone: TouchstoneData & { traces: Data[] }
+  traces: Partial<ScatterData>[]
+  format: string // 追加
 }
 
 function movingAverage(arr: number[], windowSize: number): number[] {
@@ -20,7 +20,8 @@ function movingAverage(arr: number[], windowSize: number): number[] {
   return result
 }
 
-function SParamSelector({ sParams, selected, onChange }: { sParams: string[], selected: string[], onChange: (s: string) => void }) {
+function SParamSelector({ traces, selected, onChange }: { traces: Partial<ScatterData>[]; selected: string[]; onChange: (s: string) => void }) {
+  const sParams = traces.map(t => typeof t.name === 'string' ? t.name : '').filter(Boolean)
   return (
     <div style={{ margin: '12px 0' }}>
       <label>表示Sパラメータ: </label>
@@ -62,43 +63,73 @@ function MovingAverageControl({ showMA, setShowMA, maWindow, setMaWindow, maxWin
   )
 }
 
-export function SParamChart({ touchstone }: SParamChartProps) {
-  const { chartData, sParams, format, traces } = touchstone
+export function SParamChart({ traces, format }: SParamChartProps) {
+  const sParams = traces.map(t => typeof t.name === 'string' ? t.name : '').filter(Boolean)
   const [selected, setSelected] = useState<string[]>(sParams.slice(0, 1))
   const [showMA, setShowMA] = useState(false)
+  // formatに応じてyLabelを切り替え
+  const yLabel = format === 'DB' ? 'dB' : 'Magnitude'
   const [maWindow, setMaWindow] = useState(5)
 
-  const yLabel = format === 'DB' ? 'Magnitude [dB]' : 'Magnitude'
-
-  // x軸はHzのままtraceに渡す
-  let plotData: Data[] = traces.filter(t => t.type === 'scatter' && selected.includes(t.name as string))
+  let plotData = traces.filter(t => typeof t.name === 'string' && selected.includes(t.name))
   plotData = plotData.map(t => {
-    if (t.type === 'scatter' && Array.isArray(t.x)) {
+    if (Array.isArray(t.x)) {
+      // formatに応じてhovertemplateを切り替え
+      const hovertemplate = format === 'DB'
+        ? `%{x:.2s}Hz<br>%{y:.3f} dB <extra></extra>`
+        : `%{x:.2s}Hz<br>%{y:.3f} <extra></extra>`
       return {
         ...t,
-        // x: (t.x as number[]).map(v => v / displayUnit.value), // ←Hzのまま
-        hovertemplate: `%{x:.2s}Hz<br>%{y:.3f} ${yLabel.replace(/.*\[(.*)\]/, '$1') || ''}<extra></extra>`
+        hovertemplate
       }
     }
     return t
   })
   if (showMA) {
-    const maTraces: Data[] = selected.map(s => ({
-      x: chartData.map(row => row.freq), // Hzのまま
-      y: movingAverage(chartData.map(row => row[s]), maWindow),
-      type: 'scatter',
-      mode: 'lines',
-      name: s + ' 移動平均',
-      line: { dash: 'dash' },
-      hovertemplate: `%{x:.2s}Hz<br>%{y:.3f} ${yLabel.replace(/.*\[(.*)\]/, '$1') || ''}<extra></extra>`
-    }))
+    const maTraces = plotData
+      .filter(t => Array.isArray(t.x) && t.x.every(v => typeof v === 'number'))
+      .map(t => {
+        const yArray = Array.isArray(t.y) && t.y.every((v) => typeof v === 'number') ? t.y : [];
+        const movingAvg = movingAverage(yArray, maWindow)
+        // 移動平均trace生成時の型エラー解消のため、リテラル型推論を利用
+        const scatterType = 'scatter'; // 'scatter' as const ではなく、型アサーション禁止のためconstでリテラル型推論
+        const lineMode = 'lines';
+        const dashDot = 'dot';
+
+        const movingAvgTrace: Partial<PlotData> = {
+          x: t.x,
+          y: movingAvg,
+          type: scatterType,
+          mode: lineMode,
+          name: `${t.name} (移動平均)`,
+          line: { dash: dashDot },
+          hovertemplate: t.hovertemplate,
+        }
+        return movingAvgTrace
+      })
     plotData = [...plotData, ...maTraces]
   }
 
   return (
     <>
-      <SParamSelector sParams={sParams} selected={selected} onChange={s => setSelected(prev => prev.includes(s) ? prev.filter(x => x !== s) : [...prev, s])} />
-      <MovingAverageControl showMA={showMA} setShowMA={setShowMA} maWindow={maWindow} setMaWindow={setMaWindow} maxWindow={chartData.length} />
+      <SParamSelector traces={traces} selected={selected} onChange={s => setSelected(prev => prev.includes(s) ? prev.filter(x => x !== s) : [...prev, s])} />
+      <MovingAverageControl
+        showMA={showMA}
+        setShowMA={setShowMA}
+        maWindow={maWindow}
+        setMaWindow={setMaWindow}
+        maxWindow={(() => {
+          const first = plotData[0]
+          if (
+            first &&
+            Array.isArray(first.x) &&
+            first.x.every(v => typeof v === 'number')
+          ) {
+            return first.x.length
+          }
+          return 1
+        })()}
+      />
       {selected.length > 0 && (
         <Plot
           data={plotData}
@@ -107,7 +138,7 @@ export function SParamChart({ touchstone }: SParamChartProps) {
             height: 400,
             xaxis: {
               title: { text: 'Frequency [Hz]' },
-              tickformat: '~s', // SI prefix自動スケール
+              tickformat: '~s',
               ticksuffix: 'Hz',
             },
             yaxis: {

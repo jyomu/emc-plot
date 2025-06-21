@@ -1,5 +1,5 @@
 import { getFreqMultiplier } from './freqUnit'
-import type { Data } from 'plotly.js'
+import type { ScatterData } from 'plotly.js'
 
 export type ChartRow = { freq: number } & { [sParam: string]: number }
 
@@ -71,10 +71,11 @@ function buildSParams(nPorts: number): string[] {
   return sParams
 }
 
-export async function parseTouchstone(file: File): Promise<TouchstoneData & { traces: Data[] }> {
+export async function parseTouchstone(file: File): Promise<TouchstoneData & { traces: Partial<ScatterData>[] }> {
   // ファイル読み込み
   const text: string = await new Promise((resolve, reject) => {
     const reader = new FileReader()
+    // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
     reader.onload = () => resolve(reader.result as string)
     reader.onerror = () => reject(reader.error)
     reader.readAsText(file)
@@ -119,13 +120,13 @@ export async function parseTouchstone(file: File): Promise<TouchstoneData & { tr
   })
 
   // Plotly traces生成
-  const traces: Data[] = sParams.map((s) => ({
+  const traces: Partial<ScatterData>[] = sParams.map((s) => ({
     x: chartData.map(row => row.freq),
     y: chartData.map(row => row[s]),
     type: 'scatter',
     mode: 'lines',
     name: s,
-    line: { color: '#8884d8' } // 色は必要に応じて調整
+    line: { color: '#8884d8' }
   }))
 
   return { chartData, sParams, nPorts, freqUnit, format, z0, traces }
