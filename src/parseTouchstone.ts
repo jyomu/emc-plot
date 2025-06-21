@@ -53,14 +53,20 @@ function extractDataLines(lines: string[], nPorts: number | undefined): string[]
   return dataLines
 }
 
-function guessNPorts(allNums: number[]): number {
+function resolveNPorts(filename: string, allNums: number[]): number {
+  // ファイル名からnPortsを取得（例: .s2p → 2ポート）
+  const m = filename.match(/\.s(\d+)p$/i)
+  if (m) return parseInt(m[1], 10)
+  // データ長からnPortsを推定
+  // Touchstoneの1サンプルは「freq + nPorts^2 * 2」個の数値
+  // 1 <= nPorts <= 10 の範囲で、データ長が割り切れるnPortsを探す
   for (let n = 1; n <= 10; ++n) {
     const sampleLen = 1 + n * n * 2
     if (allNums.length % sampleLen === 0) {
       return n
     }
   }
-  throw new Error('ポート数の自動推定に失敗しました')
+  throw new Error('ポート数の決定に失敗しました')
 }
 
 function buildSParams(nPorts: number): string[] {
@@ -83,14 +89,9 @@ export async function parseTouchstone(file: File): Promise<TouchstoneData> {
   const filename = file.name
   const lines = text.split(/\r?\n/)
   const { freqUnit, format, z0 } = parseHeader(lines)
-  let nPorts: number | undefined = undefined
-  if (filename) {
-    const m = filename.match(/\.s(\d+)p$/i)
-    if (m) nPorts = parseInt(m[1], 10)
-  }
-  const dataLines = extractDataLines(lines, nPorts)
+  const dataLines = extractDataLines(lines, undefined)
   const allNums = dataLines.join(' ').split(/\s+/).map(Number).filter(x => !isNaN(x))
-  if (nPorts === undefined) nPorts = guessNPorts(allNums)
+  const nPorts = resolveNPorts(filename, allNums)
   const sampleLen = 1 + nPorts * nPorts * 2
   const nSamples = Math.floor(allNums.length / sampleLen)
   const sParams = buildSParams(nPorts)
