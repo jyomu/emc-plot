@@ -14,10 +14,13 @@ const colors = [
 
 function movingAverage(arr: number[], windowSize: number): number[] {
   const result: number[] = []
+  let windowSum = 0
   for (let i = 0; i < arr.length; i++) {
-    const start = Math.max(0, i - windowSize + 1)
-    const window = arr.slice(start, i + 1)
-    result.push(window.reduce((a, b) => a + b, 0) / window.length)
+    windowSum += arr[i]
+    if (i >= windowSize) {
+      windowSum -= arr[i - windowSize]
+    }
+    result.push(windowSum / Math.min(windowSize, i + 1))
   }
   return result
 }
