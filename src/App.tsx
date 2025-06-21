@@ -113,7 +113,7 @@ function App() {
   return (
     <div style={{ padding: 24 }}>
       <h1>Touchstone Sパラメータプロッタ (nポート対応)</h1>
-      <input type="file" accept=".snp,.s2p,.s3p,.s4p,.txt" onChange={handleFile} />
+      <input type="file" accept=".snp,.s2p,.s3p,.s4p" onChange={handleFile} />
       {sParams.length > 0 && (
         <div style={{ margin: '12px 0' }}>
           <label>表示Sパラメータ: </label>
