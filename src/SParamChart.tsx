@@ -23,13 +23,16 @@ function movingAverage(arr: number[], windowSize: number): number[] {
 }
 
 function createMovingAverageData(chartData: ChartRow[], selected: string[], windowSize: number): ChartRow[] {
+  const movingAverageMap: Record<string, number[]> = {}
+  selected.forEach(s => {
+    const arr = chartData.map(d => d[s])
+    movingAverageMap[s] = movingAverage(arr, windowSize)
+  })
   return chartData.map((row, i): ChartRow => {
     const base: ChartRow = { freq: row.freq }
     selected.forEach(s => {
       base[s] = row[s]
-      const arr = chartData.map(d => d[s])
-      const maArr = movingAverage(arr, windowSize)
-      base[s + '_MA'] = maArr[i]
+      base[s + '_MA'] = movingAverageMap[s][i]
     })
     return base
   })
