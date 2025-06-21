@@ -2,8 +2,15 @@ import { useState } from 'react'
 import './App.css'
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts'
 
-// nポートTouchstoneパーサ（コメント・非数値行を厳密に無視）
-function parseTouchstone(text: string, filename?: string) {
+// nポートTouchstoneパーサ（ファイルを直接受け取る・Promiseで返す）
+async function parseTouchstone(file: File) {
+  const text: string = await new Promise((resolve, reject) => {
+    const reader = new FileReader()
+    reader.onload = () => resolve(reader.result as string)
+    reader.onerror = () => reject(reader.error)
+    reader.readAsText(file)
+  })
+  const filename = file.name
   const lines = text.split(/\r?\n/)
   let freqUnit = 'GHz'
   let format = 'MA' // 振幅・位相
@@ -15,7 +22,7 @@ function parseTouchstone(text: string, filename?: string) {
       nPorts = parseInt(m[1], 10)
     }
   }
-  let dataLines: string[] = []
+  const dataLines: string[] = []
   // ヘッダ解析
   for (const line of lines) {
     const l = line.trim()
@@ -89,22 +96,18 @@ function App() {
   const [selected, setSelected] = useState<string>('S21')
   const [error, setError] = useState<string | null>(null)
 
-  const handleFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
-    const reader = new FileReader()
-    reader.onload = () => {
-      try {
-        const parsed = parseTouchstone(reader.result as string, file.name)
-        setData(parsed.data)
-        setSParams(parsed.sParams)
-        setSelected(parsed.sParams[0] || '')
-        setError(null)
-      } catch (err) {
-        setError('パースエラー: ' + (err as Error).message)
-      }
+    try {
+      const parsed = await parseTouchstone(file)
+      setData(parsed.data)
+      setSParams(parsed.sParams)
+      setSelected(parsed.sParams[0] || '')
+      setError(null)
+    } catch (err) {
+      setError('パースエラー: ' + (err as Error).message)
     }
-    reader.readAsText(file)
   }
 
   return (
