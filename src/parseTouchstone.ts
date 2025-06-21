@@ -1,4 +1,5 @@
 import { getFreqMultiplier } from './freqUnit'
+import type { PlotData } from 'plotly.js'
 
 export type ChartRow = { freq: number } & { [sParam: string]: number }
 
@@ -7,7 +8,7 @@ export interface TouchstoneData {
   sParams: string[]
   nPorts: number
   freqUnit: string
-  format: string
+  format: 'DB' | 'MA' | 'RI'
   z0: number
 }
 
@@ -70,19 +71,18 @@ function buildSParams(nPorts: number): string[] {
   return sParams
 }
 
-export async function parseTouchstone(file: File): Promise<TouchstoneData> {
-  // ファイル読み込み
-  const text: string = await new Promise((resolve, reject) => {
-    const reader = new FileReader()
-    reader.onload = () => resolve(reader.result as string)
-    reader.onerror = () => reject(reader.error)
-    reader.readAsText(file)
-  })
+export async function parseTouchstone(file: File): Promise<TouchstoneData & { traces: Partial<PlotData>[] }> {
+  // FileReaderを使わず、readAsTextでファイル読み込み
+  const text: string = await file.text();
   const filename = file.name
   const lines = text.split(/\r?\n/)
 
   // ヘッダ解析
-  const { freqUnit, format, z0 } = parseHeader(lines)
+  const { freqUnit, format: rawFormat, z0 } = parseHeader(lines)
+  if (rawFormat !== 'DB' && rawFormat !== 'MA' && rawFormat !== 'RI') {
+    throw new Error(`Unexpected rawFormat value: ${rawFormat}. Expected 'DB', 'MA', or 'RI'.`)
+  }
+  const format = rawFormat
 
   // データ部抽出・数値配列化
   const dataLines = extractDataLines(lines)
@@ -106,16 +106,30 @@ export async function parseTouchstone(file: File): Promise<TouchstoneData> {
         const idx = base + 1 + ((i - 1) * nPorts + (j - 1)) * 2
         let mag = allNums[idx]
         const phase = allNums[idx + 1]
-        if (format === 'DB') {
-          mag = Math.pow(10, mag / 20)
+        // dBはそのまま、MA/RIのみ絶対値変換
+        if (format === 'MA') {
+          // MA: mag=振幅, phase=位相（度）
+          // そのままmag
         } else if (format === 'RI') {
+          // RI: mag=実部, phase=虚部
           mag = Math.sqrt(mag * mag + phase * phase)
         }
+        // format==='DB'は変換せずそのまま
         row[`S${i}${j}`] = mag
       }
     }
     return row
   })
 
-  return { chartData, sParams, nPorts, freqUnit, format, z0 }
+  // Plotly traces生成
+  const traces: Partial<PlotData>[] = sParams.map((s) => ({
+    x: chartData.map(row => row.freq),
+    y: chartData.map(row => row[s]),
+    type: 'scatter',
+    mode: 'lines',
+    name: s,
+    line: { color: '#8884d8' }
+  }))
+
+  return { chartData, sParams, nPorts, freqUnit, format, z0, traces }
 }

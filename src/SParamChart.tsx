@@ -1,16 +1,11 @@
 import { useState } from 'react'
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts'
-import type { TouchstoneData, ChartRow } from './parseTouchstone'
-import { freqUnitOptions } from './freqUnit'
+import Plot from 'react-plotly.js'
+import type { PlotData } from 'plotly.js'
 
 export interface SParamChartProps {
-  touchstone: TouchstoneData
+  traces: Partial<PlotData>[]
+  format: 'DB' | 'MA' | 'RI' // Narrowed type for better type safety
 }
-
-const colors = [
-  '#8884d8', '#82ca9d', '#ff7300', '#ff0000', '#0088FE', '#00C49F', '#FFBB28', '#FF8042',
-  '#A28FD0', '#F67280', '#355C7D', '#6C5B7B', '#C06C84', '#F8B195', '#355C7D', '#99B898'
-]
 
 function movingAverage(arr: number[], windowSize: number): number[] {
   const result: number[] = []
@@ -25,23 +20,8 @@ function movingAverage(arr: number[], windowSize: number): number[] {
   return result
 }
 
-function createMovingAverageData(chartData: ChartRow[], selected: string[], windowSize: number): ChartRow[] {
-  const movingAverageMap: Record<string, number[]> = {}
-  selected.forEach(s => {
-    const arr = chartData.map(d => d[s])
-    movingAverageMap[s] = movingAverage(arr, windowSize)
-  })
-  return chartData.map((row, i): ChartRow => {
-    const base: ChartRow = { freq: row.freq }
-    selected.forEach(s => {
-      base[s] = row[s]
-      base[s + '_MA'] = movingAverageMap[s][i]
-    })
-    return base
-  })
-}
-
-function SParamSelector({ sParams, selected, onChange }: { sParams: string[], selected: string[], onChange: (s: string) => void }) {
+function SParamSelector({ traces, selected, onChange }: { traces: Partial<PlotData>[]; selected: string[]; onChange: (s: string) => void }) {
+  const sParams = traces.map(t => typeof t.name === 'string' ? t.name : '').filter(Boolean)
   return (
     <div style={{ margin: '12px 0' }}>
       <label>表示Sパラメータ: </label>
@@ -55,24 +35,6 @@ function SParamSelector({ sParams, selected, onChange }: { sParams: string[], se
           {s}
         </label>
       ))}
-    </div>
-  )
-}
-
-type FreqUnitOption = typeof freqUnitOptions[number]
-
-function FreqUnitSelector({ displayUnit, setDisplayUnit }: { displayUnit: FreqUnitOption, setDisplayUnit: (u: FreqUnitOption) => void }) {
-  return (
-    <div style={{ margin: '12px 0' }}>
-      <label>周波数単位: </label>
-      <select value={displayUnit.label} onChange={e => {
-        const unit = freqUnitOptions.find(u => u.label === e.target.value)
-        if (unit) setDisplayUnit(unit)
-      }}>
-        {freqUnitOptions.map(u => (
-          <option key={u.label} value={u.label}>{u.label}</option>
-        ))}
-      </select>
     </div>
   )
 }
@@ -101,59 +63,90 @@ function MovingAverageControl({ showMA, setShowMA, maWindow, setMaWindow, maxWin
   )
 }
 
-export function SParamChart({ touchstone }: SParamChartProps) {
-  const { chartData, sParams, format, freqUnit } = touchstone
+export function SParamChart({ traces, format }: SParamChartProps) {
+  const sParams = traces.map(t => typeof t.name === 'string' ? t.name : '').filter(Boolean)
   const [selected, setSelected] = useState<string[]>(sParams.slice(0, 1))
-  const defaultUnit = freqUnitOptions.find(u => u.label.toUpperCase() === freqUnit) || freqUnitOptions[0]
-  const [displayUnit, setDisplayUnit] = useState<FreqUnitOption>(defaultUnit)
   const [showMA, setShowMA] = useState(false)
-  const [maWindow, setMaWindow] = useState(5)
+  // formatに応じてyLabelを切り替え
+  const yLabel = format === 'DB' ? 'dB' : 'Magnitude'
+  const [maWindow, setMaWindow] = useState(50)
 
-  const yLabel = format === 'DB' ? 'Magnitude [dB]' : 'Magnitude'
-  const freqLabel = `Frequency [${displayUnit.label}]`
-
-  const maData = createMovingAverageData(chartData, selected, maWindow)
+  let plotData = traces.filter(t => typeof t.name === 'string' && selected.includes(t.name))
+  plotData = plotData.map(t => {
+    if (Array.isArray(t.x)) {
+      // formatに応じてhovertemplateを切り替え
+      const hovertemplate = format === 'DB'
+        ? `%{x:.2s}Hz<br>%{y:.3f} dB <extra></extra>`
+        : `%{x:.2s}Hz<br>%{y:.3f} <extra></extra>`
+      return {
+        ...t,
+        hovertemplate
+      }
+    }
+    return t
+  })
+  if (showMA) {
+    const maTraces = plotData
+      .filter(t => Array.isArray(t.x) && t.x.every(v => typeof v === 'number'))
+      .map(t => {
+        const yArray = Array.isArray(t.y) && t.y.every((v) => typeof v === 'number') ? t.y : [];
+        const movingAvg = movingAverage(yArray, maWindow)
+        const movingAvgTrace: Partial<PlotData> = {
+          x: t.x,
+          y: movingAvg,
+          type: 'scatter',
+          mode: 'lines',
+          name: `${t.name} (移動平均)`,
+          line: { dash: 'dash' },
+          hovertemplate: t.hovertemplate,
+        }
+        return movingAvgTrace
+      })
+    plotData = [...plotData, ...maTraces]
+  }
 
   return (
     <>
-      <SParamSelector sParams={sParams} selected={selected} onChange={s => setSelected(prev => prev.includes(s) ? prev.filter(x => x !== s) : [...prev, s])} />
-      <FreqUnitSelector displayUnit={displayUnit} setDisplayUnit={setDisplayUnit} />
-      <MovingAverageControl showMA={showMA} setShowMA={setShowMA} maWindow={maWindow} setMaWindow={setMaWindow} maxWindow={chartData.length} />
+      <SParamSelector traces={traces} selected={selected} onChange={s => setSelected(prev => prev.includes(s) ? prev.filter(x => x !== s) : [...prev, s])} />
+      <MovingAverageControl
+        showMA={showMA}
+        setShowMA={setShowMA}
+        maWindow={maWindow}
+        setMaWindow={setMaWindow}
+        maxWindow={(() => {
+          const first = plotData[0]
+          if (
+            first &&
+            Array.isArray(first.x) &&
+            first.x.every(v => typeof v === 'number')
+          ) {
+            return first.x.length
+          }
+          return 1
+        })()}
+      />
       {selected.length > 0 && (
-        <ResponsiveContainer width="100%" height={400}>
-          <LineChart data={showMA ? maData : chartData}>
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis
-              dataKey="freq"
-              tickFormatter={v => (v/displayUnit.value).toFixed(2)}
-              label={{ value: freqLabel, position: 'insideBottom', offset: -5 }}
-            />
-            <YAxis label={{ value: yLabel, angle: -90, position: 'insideLeft' }} />
-            <Tooltip formatter={(v: number) => v.toPrecision(4)} labelFormatter={v => (v/displayUnit.value).toFixed(2) + ` ${displayUnit.label}`} />
-            <Legend />
-            {selected.map((s, idx) => (
-              <Line
-                key={s}
-                type="monotone"
-                dataKey={s}
-                stroke={colors[idx % colors.length]}
-                name={s + ' 振幅'}
-                dot={false}
-              />
-            ))}
-            {showMA && selected.map((s, idx) => (
-              <Line
-                key={s + '_MA'}
-                type="monotone"
-                dataKey={s + '_MA'}
-                stroke={colors[(idx + 8) % colors.length]}
-                name={s + ' 移動平均'}
-                dot={false}
-                strokeDasharray="5 2"
-              />
-            ))}
-          </LineChart>
-        </ResponsiveContainer>
+        <Plot
+          data={plotData}
+          layout={{
+            autosize: true,
+            height: 400,
+            xaxis: {
+              title: { text: 'Frequency [Hz]' },
+              tickformat: '~s',
+              ticksuffix: 'Hz',
+            },
+            yaxis: {
+              title: { text: yLabel },
+              tickformat: '.3f',
+            },
+            legend: { orientation: 'h' },
+            margin: { t: 30, l: 60, r: 30, b: 60 }
+          }}
+          useResizeHandler
+          style={{ width: '100%', height: '100%' }}
+          config={{ responsive: true }}
+        />
       )}
     </>
   )
