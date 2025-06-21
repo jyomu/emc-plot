@@ -1,4 +1,14 @@
-import { getFreqMultiplier } from './freqUnit'
+const freqUnitOptions = [
+  { label: 'GHz', value: 1e9 },
+  { label: 'MHz', value: 1e6 },
+  { label: 'kHz', value: 1e3 },
+  { label: 'Hz', value: 1 },
+] as const;
+function getFreqMultiplier(unit: string): number {
+  const opt = freqUnitOptions.find(u => u.label.toUpperCase() === unit.toUpperCase())
+  return opt ? opt.value : 1;
+}
+
 import type { PlotData } from 'plotly.js'
 
 export type ChartRow = { freq: number } & { [sParam: string]: number }
