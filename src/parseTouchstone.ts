@@ -1,5 +1,7 @@
+export type ChartRow = { freq: number } & Record<string, number>
+
 export interface TouchstoneData {
-  chartData: Array<Record<string, number>> // freq, S11, S21, ...
+  chartData: ChartRow[] // freq, S11, S21, ...
   sParams: string[]
   nPorts: number
   freqUnit: string
@@ -89,7 +91,7 @@ export async function parseTouchstone(file: File): Promise<TouchstoneData> {
   // ここからはnPortsは必ずnumber
   const sampleLen = 1 + nPorts * nPorts * 2
   const nSamples = Math.floor(allNums.length / sampleLen)
-  const chartData: Array<Record<string, number>> = []
+  const chartData: ChartRow[] = []
   const sParams: string[] = []
   for (let i = 1; i <= nPorts; ++i) {
     for (let j = 1; j <= nPorts; ++j) {
@@ -103,7 +105,7 @@ export async function parseTouchstone(file: File): Promise<TouchstoneData> {
       freqUnit === 'MHZ' ? allNums[base] * 1e6 :
       freqUnit === 'KHZ' ? allNums[base] * 1e3 :
       allNums[base]
-    const row: Record<string, number> = { freq }
+    const row: ChartRow = { freq }
     for (let i = 1; i <= nPorts; ++i) {
       for (let j = 1; j <= nPorts; ++j) {
         const idx = base + 1 + ((i - 1) * nPorts + (j - 1)) * 2

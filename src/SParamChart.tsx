@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts'
-import type { TouchstoneData } from './parseTouchstone'
+import type { TouchstoneData, ChartRow } from './parseTouchstone'
 
 export interface SParamChartProps {
   touchstone: TouchstoneData
@@ -18,93 +18,105 @@ const freqUnitOptions = [
   { label: 'Hz', value: 1 },
 ]
 
-// 移動平均を計算する関数
 function movingAverage(arr: number[], windowSize: number): number[] {
-  const result: number[] = [];
+  const result: number[] = []
   for (let i = 0; i < arr.length; i++) {
-    const start = Math.max(0, i - windowSize + 1);
-    const window = arr.slice(start, i + 1);
-    result.push(window.reduce((a, b) => a + b, 0) / window.length);
+    const start = Math.max(0, i - windowSize + 1)
+    const window = arr.slice(start, i + 1)
+    result.push(window.reduce((a, b) => a + b, 0) / window.length)
   }
-  return result;
+  return result
+}
+
+function createMovingAverageData(chartData: ChartRow[], selected: string[], windowSize: number): ChartRow[] {
+  return chartData.map((row, i): ChartRow => {
+    const base: ChartRow = { freq: row.freq }
+    selected.forEach(s => {
+      base[s] = row[s]
+      const arr = chartData.map(d => d[s])
+      const maArr = movingAverage(arr, windowSize)
+      base[s + '_MA'] = maArr[i]
+    })
+    return base
+  })
+}
+
+function SParamSelector({ sParams, selected, onChange }: { sParams: string[], selected: string[], onChange: (s: string) => void }) {
+  return (
+    <div style={{ margin: '12px 0' }}>
+      <label>表示Sパラメータ: </label>
+      {sParams.map(s => (
+        <label key={s} style={{ marginRight: 8 }}>
+          <input
+            type="checkbox"
+            checked={selected.includes(s)}
+            onChange={() => onChange(s)}
+          />
+          {s}
+        </label>
+      ))}
+    </div>
+  )
+}
+
+function FreqUnitSelector({ displayUnit, setDisplayUnit }: { displayUnit: { label: string, value: number }, setDisplayUnit: (u: { label: string, value: number }) => void }) {
+  return (
+    <div style={{ margin: '12px 0' }}>
+      <label>周波数単位: </label>
+      <select value={displayUnit.label} onChange={e => {
+        const unit = freqUnitOptions.find(u => u.label === e.target.value)
+        if (unit) setDisplayUnit(unit)
+      }}>
+        {freqUnitOptions.map(u => (
+          <option key={u.label} value={u.label}>{u.label}</option>
+        ))}
+      </select>
+    </div>
+  )
+}
+
+function MovingAverageControl({ showMA, setShowMA, maWindow, setMaWindow, maxWindow }: { showMA: boolean, setShowMA: (b: boolean) => void, maWindow: number, setMaWindow: (n: number) => void, maxWindow: number }) {
+  return (
+    <div style={{ margin: '12px 0' }}>
+      <label>
+        <input type="checkbox" checked={showMA} onChange={e => setShowMA(e.target.checked)} />
+        移動平均を表示
+      </label>
+      {showMA && (
+        <span style={{ marginLeft: 12 }}>
+          ウィンドウサイズ:
+          <input
+            type="number"
+            min={1}
+            max={maxWindow}
+            value={maWindow}
+            onChange={e => setMaWindow(Number(e.target.value))}
+            style={{ width: 60, marginLeft: 4 }}
+          />
+        </span>
+      )}
+    </div>
+  )
 }
 
 export function SParamChart({ touchstone }: SParamChartProps) {
   const { chartData, sParams, format, freqUnit } = touchstone
   const [selected, setSelected] = useState<string[]>(sParams.slice(0, 1))
-  // ユーザーが選択する表示単位
   const defaultUnit = freqUnitOptions.find(u => u.label.toUpperCase() === freqUnit) || freqUnitOptions[0]
   const [displayUnit, setDisplayUnit] = useState(defaultUnit)
-  // 移動平均の表示ON/OFF
   const [showMA, setShowMA] = useState(false)
-  // 移動平均のウィンドウサイズ
   const [maWindow, setMaWindow] = useState(5)
 
-  const handleCheck = (s: string) => {
-    setSelected(prev => prev.includes(s) ? prev.filter(x => x !== s) : [...prev, s])
-  }
-
-  // Y軸ラベル
   const yLabel = format === 'DB' ? 'Magnitude [dB]' : 'Magnitude'
   const freqLabel = `Frequency [${displayUnit.label}]`
 
-  // 移動平均データを生成（keyごとに独立したデータ構造）
-  const maData = chartData.map((row, i) => {
-    const base: { freq: number; [key: string]: number } = { freq: row.freq }
-    selected.forEach(s => {
-      base[s] = row[s]
-      const arr = chartData.map(d => d[s])
-      const maArr = movingAverage(arr, maWindow)
-      base[s + '_MA'] = maArr[i]
-    })
-    return base
-  })
+  const maData = createMovingAverageData(chartData, selected, maWindow)
 
   return (
     <>
-      <div style={{ margin: '12px 0' }}>
-        <label>表示Sパラメータ: </label>
-        {sParams.map(s => (
-          <label key={s} style={{ marginRight: 8 }}>
-            <input
-              type="checkbox"
-              checked={selected.includes(s)}
-              onChange={() => handleCheck(s)}
-            />
-            {s}
-          </label>
-        ))}
-      </div>
-      <div style={{ margin: '12px 0' }}>
-        <label>周波数単位: </label>
-        <select value={displayUnit.label} onChange={e => {
-          const unit = freqUnitOptions.find(u => u.label === e.target.value)
-          if (unit) setDisplayUnit(unit)
-        }}>
-          {freqUnitOptions.map(u => (
-            <option key={u.label} value={u.label}>{u.label}</option>
-          ))}
-        </select>
-      </div>
-      <div style={{ margin: '12px 0' }}>
-        <label>
-          <input type="checkbox" checked={showMA} onChange={e => setShowMA(e.target.checked)} />
-          移動平均を表示
-        </label>
-        {showMA && (
-          <span style={{ marginLeft: 12 }}>
-            ウィンドウサイズ:
-            <input
-              type="number"
-              min={1}
-              max={chartData.length}
-              value={maWindow}
-              onChange={e => setMaWindow(Number(e.target.value))}
-              style={{ width: 60, marginLeft: 4 }}
-            />
-          </span>
-        )}
-      </div>
+      <SParamSelector sParams={sParams} selected={selected} onChange={s => setSelected(prev => prev.includes(s) ? prev.filter(x => x !== s) : [...prev, s])} />
+      <FreqUnitSelector displayUnit={displayUnit} setDisplayUnit={setDisplayUnit} />
+      <MovingAverageControl showMA={showMA} setShowMA={setShowMA} maWindow={maWindow} setMaWindow={setMaWindow} maxWindow={chartData.length} />
       {selected.length > 0 && (
         <ResponsiveContainer width="100%" height={400}>
           <LineChart data={showMA ? maData : chartData}>
