@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts'
+import Plot from 'react-plotly.js'
 import type { TouchstoneData, ChartRow } from './parseTouchstone'
 import { freqUnitOptions } from './freqUnit'
 
@@ -113,6 +113,30 @@ export function SParamChart({ touchstone }: SParamChartProps) {
   const freqLabel = `Frequency [${displayUnit.label}]`
 
   const maData = createMovingAverageData(chartData, selected, maWindow)
+  const plotData = (showMA ? maData : chartData)
+
+  // Plotly用データ生成
+  const traces: import('plotly.js').Data[] = []
+  selected.forEach((s, idx) => {
+    traces.push({
+      x: plotData.map(row => row.freq / displayUnit.value),
+      y: plotData.map(row => row[s]),
+      type: 'scatter',
+      mode: 'lines',
+      name: s + ' 振幅',
+      line: { color: colors[idx % colors.length] }
+    })
+    if (showMA) {
+      traces.push({
+        x: plotData.map(row => row.freq / displayUnit.value),
+        y: plotData.map(row => row[s + '_MA']),
+        type: 'scatter',
+        mode: 'lines',
+        name: s + ' 移動平均',
+        line: { color: colors[(idx + 8) % colors.length], dash: 'dash' }
+      })
+    }
+  })
 
   return (
     <>
@@ -120,40 +144,20 @@ export function SParamChart({ touchstone }: SParamChartProps) {
       <FreqUnitSelector displayUnit={displayUnit} setDisplayUnit={setDisplayUnit} />
       <MovingAverageControl showMA={showMA} setShowMA={setShowMA} maWindow={maWindow} setMaWindow={setMaWindow} maxWindow={chartData.length} />
       {selected.length > 0 && (
-        <ResponsiveContainer width="100%" height={400}>
-          <LineChart data={showMA ? maData : chartData}>
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis
-              dataKey="freq"
-              tickFormatter={v => (v/displayUnit.value).toFixed(2)}
-              label={{ value: freqLabel, position: 'insideBottom', offset: -5 }}
-            />
-            <YAxis label={{ value: yLabel, angle: -90, position: 'insideLeft' }} />
-            <Tooltip formatter={(v: number) => v.toPrecision(4)} labelFormatter={v => (v/displayUnit.value).toFixed(2) + ` ${displayUnit.label}`} />
-            <Legend />
-            {selected.map((s, idx) => (
-              <Line
-                key={s}
-                type="monotone"
-                dataKey={s}
-                stroke={colors[idx % colors.length]}
-                name={s + ' 振幅'}
-                dot={false}
-              />
-            ))}
-            {showMA && selected.map((s, idx) => (
-              <Line
-                key={s + '_MA'}
-                type="monotone"
-                dataKey={s + '_MA'}
-                stroke={colors[(idx + 8) % colors.length]}
-                name={s + ' 移動平均'}
-                dot={false}
-                strokeDasharray="5 2"
-              />
-            ))}
-          </LineChart>
-        </ResponsiveContainer>
+        <Plot
+          data={traces}
+          layout={{
+            autosize: true,
+            height: 400,
+            xaxis: { title: { text: freqLabel } },
+            yaxis: { title: { text: yLabel } },
+            legend: { orientation: 'h' },
+            margin: { t: 30, l: 60, r: 30, b: 60 }
+          }}
+          useResizeHandler
+          style={{ width: '100%', height: '100%' }}
+          config={{ responsive: true }}
+        />
       )}
     </>
   )
