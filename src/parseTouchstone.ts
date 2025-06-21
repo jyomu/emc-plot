@@ -80,6 +80,7 @@ function buildSParams(nPorts: number): string[] {
 }
 
 export async function parseTouchstone(file: File): Promise<TouchstoneData> {
+  // ファイル読み込み
   const text: string = await new Promise((resolve, reject) => {
     const reader = new FileReader()
     reader.onload = () => resolve(reader.result as string)
@@ -88,15 +89,24 @@ export async function parseTouchstone(file: File): Promise<TouchstoneData> {
   })
   const filename = file.name
   const lines = text.split(/\r?\n/)
+
+  // ヘッダ解析
   const { freqUnit, format, z0 } = parseHeader(lines)
+
+  // データ部抽出・数値配列化
   const dataLines = extractDataLines(lines, undefined)
   const allNums = dataLines.join(' ').split(/\s+/).map(Number).filter(x => !isNaN(x))
+
+  // ポート数決定
   const nPorts = resolveNPorts(filename, allNums)
   const sampleLen = 1 + nPorts * nPorts * 2
   const nSamples = Math.floor(allNums.length / sampleLen)
+
+  // Sパラ名リスト生成
   const sParams = buildSParams(nPorts)
-  const chartData: ChartRow[] = []
-  for (let s = 0; s < nSamples; ++s) {
+
+  // チャートデータ生成
+  const chartData: ChartRow[] = Array.from({ length: nSamples }, (_, s) => {
     const base = s * sampleLen
     const freq = getFreqMultiplier(freqUnit) * allNums[base]
     const row: ChartRow = { freq }
@@ -113,7 +123,8 @@ export async function parseTouchstone(file: File): Promise<TouchstoneData> {
         row[`S${i}${j}`] = mag
       }
     }
-    chartData.push(row)
-  }
+    return row
+  })
+
   return { chartData, sParams, nPorts, freqUnit, format, z0 }
 }
