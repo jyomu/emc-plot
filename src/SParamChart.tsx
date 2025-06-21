@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts'
 import type { TouchstoneData, ChartRow } from './parseTouchstone'
+import { freqUnitOptions } from './freqUnit'
 
 export interface SParamChartProps {
   touchstone: TouchstoneData
@@ -9,13 +10,6 @@ export interface SParamChartProps {
 const colors = [
   '#8884d8', '#82ca9d', '#ff7300', '#ff0000', '#0088FE', '#00C49F', '#FFBB28', '#FF8042',
   '#A28FD0', '#F67280', '#355C7D', '#6C5B7B', '#C06C84', '#F8B195', '#355C7D', '#99B898'
-]
-
-const freqUnitOptions = [
-  { label: 'GHz', value: 1e9 },
-  { label: 'MHz', value: 1e6 },
-  { label: 'kHz', value: 1e3 },
-  { label: 'Hz', value: 1 },
 ]
 
 function movingAverage(arr: number[], windowSize: number): number[] {
@@ -59,7 +53,9 @@ function SParamSelector({ sParams, selected, onChange }: { sParams: string[], se
   )
 }
 
-function FreqUnitSelector({ displayUnit, setDisplayUnit }: { displayUnit: { label: string, value: number }, setDisplayUnit: (u: { label: string, value: number }) => void }) {
+type FreqUnitOption = typeof freqUnitOptions[number]
+
+function FreqUnitSelector({ displayUnit, setDisplayUnit }: { displayUnit: FreqUnitOption, setDisplayUnit: (u: FreqUnitOption) => void }) {
   return (
     <div style={{ margin: '12px 0' }}>
       <label>周波数単位: </label>
@@ -103,7 +99,7 @@ export function SParamChart({ touchstone }: SParamChartProps) {
   const { chartData, sParams, format, freqUnit } = touchstone
   const [selected, setSelected] = useState<string[]>(sParams.slice(0, 1))
   const defaultUnit = freqUnitOptions.find(u => u.label.toUpperCase() === freqUnit) || freqUnitOptions[0]
-  const [displayUnit, setDisplayUnit] = useState(defaultUnit)
+  const [displayUnit, setDisplayUnit] = useState<FreqUnitOption>(defaultUnit)
   const [showMA, setShowMA] = useState(false)
   const [maWindow, setMaWindow] = useState(5)
 

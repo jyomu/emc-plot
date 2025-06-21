@@ -1,3 +1,5 @@
+import { getFreqMultiplier } from './freqUnit'
+
 export type ChartRow = { freq: number } & { [sParam: string]: number }
 
 export interface TouchstoneData {
@@ -95,11 +97,7 @@ export async function parseTouchstone(file: File): Promise<TouchstoneData> {
   const chartData: ChartRow[] = []
   for (let s = 0; s < nSamples; ++s) {
     const base = s * sampleLen
-    const freq =
-      freqUnit === 'GHZ' ? allNums[base] * 1e9 :
-      freqUnit === 'MHZ' ? allNums[base] * 1e6 :
-      freqUnit === 'KHZ' ? allNums[base] * 1e3 :
-      allNums[base]
+    const freq = getFreqMultiplier(freqUnit) * allNums[base]
     const row: ChartRow = { freq }
     for (let i = 1; i <= nPorts; ++i) {
       for (let j = 1; j <= nPorts; ++j) {
