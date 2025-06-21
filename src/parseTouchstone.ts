@@ -108,11 +108,15 @@ export async function parseTouchstone(file: File): Promise<TouchstoneData & { tr
         const idx = base + 1 + ((i - 1) * nPorts + (j - 1)) * 2
         let mag = allNums[idx]
         const phase = allNums[idx + 1]
-        if (format === 'DB') {
-          mag = Math.pow(10, mag / 20)
+        // dBはそのまま、MA/RIのみ絶対値変換
+        if (format === 'MA') {
+          // MA: mag=振幅, phase=位相（度）
+          // そのままmag
         } else if (format === 'RI') {
+          // RI: mag=実部, phase=虚部
           mag = Math.sqrt(mag * mag + phase * phase)
         }
+        // format==='DB'は変換せずそのまま
         row[`S${i}${j}`] = mag
       }
     }
