@@ -1,5 +1,5 @@
 import { getFreqMultiplier } from './freqUnit'
-import type { ScatterData } from 'plotly.js'
+import type { PlotData } from 'plotly.js'
 
 export type ChartRow = { freq: number } & { [sParam: string]: number }
 
@@ -8,7 +8,7 @@ export interface TouchstoneData {
   sParams: string[]
   nPorts: number
   freqUnit: string
-  format: string
+  format: 'DB' | 'MA' | 'RI'
   z0: number
 }
 
@@ -71,14 +71,15 @@ function buildSParams(nPorts: number): string[] {
   return sParams
 }
 
-export async function parseTouchstone(file: File): Promise<TouchstoneData & { traces: Partial<ScatterData>[] }> {
+export async function parseTouchstone(file: File): Promise<TouchstoneData & { traces: Partial<PlotData>[] }> {
   // FileReaderを使わず、readAsTextでファイル読み込み
   const text: string = await file.text();
   const filename = file.name
   const lines = text.split(/\r?\n/)
 
   // ヘッダ解析
-  const { freqUnit, format, z0 } = parseHeader(lines)
+  const { freqUnit, format: rawFormat, z0 } = parseHeader(lines)
+  const format = (rawFormat === 'DB' || rawFormat === 'MA' || rawFormat === 'RI') ? rawFormat : 'DB'
 
   // データ部抽出・数値配列化
   const dataLines = extractDataLines(lines)
@@ -118,7 +119,7 @@ export async function parseTouchstone(file: File): Promise<TouchstoneData & { tr
   })
 
   // Plotly traces生成
-  const traces: Partial<ScatterData>[] = sParams.map((s) => ({
+  const traces: Partial<PlotData>[] = sParams.map((s) => ({
     x: chartData.map(row => row.freq),
     y: chartData.map(row => row[s]),
     type: 'scatter',

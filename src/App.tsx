@@ -2,10 +2,11 @@ import { useState } from 'react'
 import { parseTouchstone } from './parseTouchstone'
 import { SParamChart } from './SParamChart'
 import './App.css'
+import type { PlotData } from 'plotly.js'
 
 function App() {
-  const [traces, setTraces] = useState<Partial<import('plotly.js').ScatterData>[] | null>(null)
-  const [format, setFormat] = useState<string>('')
+  const [traces, setTraces] = useState<Partial<PlotData>[] | null>(null)
+  const [format, setFormat] = useState<'DB' | 'MA' | 'RI'>('DB')
   const [error, setError] = useState<string | null>(null)
 
   return (

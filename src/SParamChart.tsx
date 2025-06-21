@@ -1,9 +1,9 @@
 import { useState } from 'react'
 import Plot from 'react-plotly.js'
-import type { ScatterData, PlotData } from 'plotly.js'
+import type { PlotData } from 'plotly.js'
 
 export interface SParamChartProps {
-  traces: Partial<ScatterData>[]
+  traces: Partial<PlotData>[]
   format: 'DB' | 'MA' | 'RI' // Narrowed type for better type safety
 }
 
@@ -20,7 +20,7 @@ function movingAverage(arr: number[], windowSize: number): number[] {
   return result
 }
 
-function SParamSelector({ traces, selected, onChange }: { traces: Partial<ScatterData>[]; selected: string[]; onChange: (s: string) => void }) {
+function SParamSelector({ traces, selected, onChange }: { traces: Partial<PlotData>[]; selected: string[]; onChange: (s: string) => void }) {
   const sParams = traces.map(t => typeof t.name === 'string' ? t.name : '').filter(Boolean)
   return (
     <div style={{ margin: '12px 0' }}>
