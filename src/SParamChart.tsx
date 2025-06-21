@@ -19,8 +19,7 @@ const freqUnitOptions = [
 ]
 
 export function SParamChart({ touchstone }: SParamChartProps) {
-  const { sParamMap, format, freqUnit } = touchstone
-  const sParams = Array.from(sParamMap.keys())
+  const { chartData, sParams, format, freqUnit } = touchstone
   const [selected, setSelected] = useState<string[]>(sParams.slice(0, 1))
   // ユーザーが選択する表示単位
   const defaultUnit = freqUnitOptions.find(u => u.label.toUpperCase() === freqUnit) || freqUnitOptions[0]
@@ -28,20 +27,6 @@ export function SParamChart({ touchstone }: SParamChartProps) {
 
   const handleCheck = (s: string) => {
     setSelected(prev => prev.includes(s) ? prev.filter(x => x !== s) : [...prev, s])
-  }
-
-  // recharts用データ整形（freqごとにまとめる）
-  const chartData: Record<string, number>[] = []
-  if (sParams.length > 0) {
-    const base = sParamMap.get(sParams[0]) || []
-    for (let i = 0; i < base.length; ++i) {
-      const obj: Record<string, number> = { freq: base[i].freq }
-      for (const s of sParams) {
-        const arr = sParamMap.get(s)
-        if (arr && arr[i]) obj[s] = arr[i].value
-      }
-      chartData.push(obj)
-    }
   }
 
   // Y軸ラベル

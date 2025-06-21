@@ -1,5 +1,6 @@
 export interface TouchstoneData {
-  sParamMap: Map<string, Array<{ freq: number; value: number }>>
+  chartData: Array<Record<string, number>> // freq, S11, S21, ...
+  sParams: string[]
   nPorts: number
   freqUnit: string
   format: string
@@ -88,10 +89,11 @@ export async function parseTouchstone(file: File): Promise<TouchstoneData> {
   // ここからはnPortsは必ずnumber
   const sampleLen = 1 + nPorts * nPorts * 2
   const nSamples = Math.floor(allNums.length / sampleLen)
-  const sParamMap: Map<string, Array<{ freq: number; value: number }>> = new Map()
+  const chartData: Array<Record<string, number>> = []
+  const sParams: string[] = []
   for (let i = 1; i <= nPorts; ++i) {
     for (let j = 1; j <= nPorts; ++j) {
-      sParamMap.set(`S${i}${j}`, [])
+      sParams.push(`S${i}${j}`)
     }
   }
   for (let s = 0; s < nSamples; ++s) {
@@ -101,6 +103,7 @@ export async function parseTouchstone(file: File): Promise<TouchstoneData> {
       freqUnit === 'MHZ' ? allNums[base] * 1e6 :
       freqUnit === 'KHZ' ? allNums[base] * 1e3 :
       allNums[base]
+    const row: Record<string, number> = { freq }
     for (let i = 1; i <= nPorts; ++i) {
       for (let j = 1; j <= nPorts; ++j) {
         const idx = base + 1 + ((i - 1) * nPorts + (j - 1)) * 2
@@ -113,9 +116,10 @@ export async function parseTouchstone(file: File): Promise<TouchstoneData> {
           // 実部・虚部→振幅
           mag = Math.sqrt(mag * mag + phase * phase)
         }
-        sParamMap.get(`S${i}${j}`)?.push({ freq, value: mag })
+        row[`S${i}${j}`] = mag
       }
     }
+    chartData.push(row)
   }
-  return { sParamMap, nPorts, freqUnit, format, z0 }
+  return { chartData, sParams, nPorts, freqUnit, format, z0 }
 }
