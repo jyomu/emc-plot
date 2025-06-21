@@ -69,7 +69,7 @@ export function SParamChart({ traces, format }: SParamChartProps) {
   const [showMA, setShowMA] = useState(false)
   // formatに応じてyLabelを切り替え
   const yLabel = format === 'DB' ? 'dB' : 'Magnitude'
-  const [maWindow, setMaWindow] = useState(5)
+  const [maWindow, setMaWindow] = useState(50)
 
   let plotData = traces.filter(t => typeof t.name === 'string' && selected.includes(t.name))
   plotData = plotData.map(t => {
@@ -91,18 +91,13 @@ export function SParamChart({ traces, format }: SParamChartProps) {
       .map(t => {
         const yArray = Array.isArray(t.y) && t.y.every((v) => typeof v === 'number') ? t.y : [];
         const movingAvg = movingAverage(yArray, maWindow)
-        // 移動平均trace生成時の型エラー解消のため、リテラル型推論を利用
-        const scatterType = 'scatter'; // 'scatter' as const ではなく、型アサーション禁止のためconstでリテラル型推論
-        const lineMode = 'lines';
-        const dashDot = 'dot';
-
         const movingAvgTrace: Partial<PlotData> = {
           x: t.x,
           y: movingAvg,
-          type: scatterType,
-          mode: lineMode,
+          type: 'scatter',
+          mode: 'lines',
           name: `${t.name} (移動平均)`,
-          line: { dash: dashDot },
+          line: { dash: 'dash' },
           hovertemplate: t.hovertemplate,
         }
         return movingAvgTrace
