@@ -30,27 +30,18 @@ function parseHeader(lines: string[]): { freqUnit: string, format: string, z0: n
   throw new Error('ヘッダ行が見つかりません')
 }
 
-function extractDataLines(lines: string[], nPorts: number | undefined): string[] {
-  const dataLines: string[] = []
-  let current = ''
-  for (const line of lines) {
-    const l = line.trim()
-    if (l === '' || l.startsWith('!') || l.startsWith('#')) continue
-    current += (current ? ' ' : '') + l
-    if (nPorts === undefined) {
-      dataLines.push(current)
-      current = ''
-    } else {
-      const expected = 1 + nPorts * nPorts * 2
-      const nums = current.split(/\s+/).filter(x => x.match(/[-+]?\d/))
-      if (nums.length >= expected) {
+function extractDataLines(lines: string[]): string[] {
+    const dataLines: string[] = []
+    let current = ''
+    for (const line of lines) {
+        const l = line.trim()
+        if (l === '' || l.startsWith('!') || l.startsWith('#')) continue
+        current += (current ? ' ' : '') + l
         dataLines.push(current)
         current = ''
-      }
     }
-  }
-  if (current) dataLines.push(current)
-  return dataLines
+    if (current) dataLines.push(current)
+    return dataLines
 }
 
 function resolveNPorts(filename: string, allNums: number[]): number {
@@ -94,7 +85,7 @@ export async function parseTouchstone(file: File): Promise<TouchstoneData> {
   const { freqUnit, format, z0 } = parseHeader(lines)
 
   // データ部抽出・数値配列化
-  const dataLines = extractDataLines(lines, undefined)
+  const dataLines = extractDataLines(lines)
   const allNums = dataLines.join(' ').split(/\s+/).map(Number).filter(x => !isNaN(x))
 
   // ポート数決定
