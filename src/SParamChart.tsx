@@ -18,12 +18,27 @@ const freqUnitOptions = [
   { label: 'Hz', value: 1 },
 ]
 
+// 移動平均を計算する関数
+function movingAverage(arr: number[], windowSize: number): number[] {
+  const result: number[] = [];
+  for (let i = 0; i < arr.length; i++) {
+    const start = Math.max(0, i - windowSize + 1);
+    const window = arr.slice(start, i + 1);
+    result.push(window.reduce((a, b) => a + b, 0) / window.length);
+  }
+  return result;
+}
+
 export function SParamChart({ touchstone }: SParamChartProps) {
   const { chartData, sParams, format, freqUnit } = touchstone
   const [selected, setSelected] = useState<string[]>(sParams.slice(0, 1))
   // ユーザーが選択する表示単位
   const defaultUnit = freqUnitOptions.find(u => u.label.toUpperCase() === freqUnit) || freqUnitOptions[0]
   const [displayUnit, setDisplayUnit] = useState(defaultUnit)
+  // 移動平均の表示ON/OFF
+  const [showMA, setShowMA] = useState(false)
+  // 移動平均のウィンドウサイズ
+  const [maWindow, setMaWindow] = useState(5)
 
   const handleCheck = (s: string) => {
     setSelected(prev => prev.includes(s) ? prev.filter(x => x !== s) : [...prev, s])
@@ -32,6 +47,18 @@ export function SParamChart({ touchstone }: SParamChartProps) {
   // Y軸ラベル
   const yLabel = format === 'DB' ? 'Magnitude [dB]' : 'Magnitude'
   const freqLabel = `Frequency [${displayUnit.label}]`
+
+  // 移動平均データを生成（keyごとに独立したデータ構造）
+  const maData = chartData.map((row, i) => {
+    const base: { freq: number; [key: string]: number } = { freq: row.freq }
+    selected.forEach(s => {
+      base[s] = row[s]
+      const arr = chartData.map(d => d[s])
+      const maArr = movingAverage(arr, maWindow)
+      base[s + '_MA'] = maArr[i]
+    })
+    return base
+  })
 
   return (
     <>
@@ -59,9 +86,28 @@ export function SParamChart({ touchstone }: SParamChartProps) {
           ))}
         </select>
       </div>
+      <div style={{ margin: '12px 0' }}>
+        <label>
+          <input type="checkbox" checked={showMA} onChange={e => setShowMA(e.target.checked)} />
+          移動平均を表示
+        </label>
+        {showMA && (
+          <span style={{ marginLeft: 12 }}>
+            ウィンドウサイズ:
+            <input
+              type="number"
+              min={1}
+              max={chartData.length}
+              value={maWindow}
+              onChange={e => setMaWindow(Number(e.target.value))}
+              style={{ width: 60, marginLeft: 4 }}
+            />
+          </span>
+        )}
+      </div>
       {selected.length > 0 && (
         <ResponsiveContainer width="100%" height={400}>
-          <LineChart data={chartData}>
+          <LineChart data={showMA ? maData : chartData}>
             <CartesianGrid strokeDasharray="3 3" />
             <XAxis
               dataKey="freq"
@@ -79,6 +125,17 @@ export function SParamChart({ touchstone }: SParamChartProps) {
                 stroke={colors[idx % colors.length]}
                 name={s + ' 振幅'}
                 dot={false}
+              />
+            ))}
+            {showMA && selected.map((s, idx) => (
+              <Line
+                key={s + '_MA'}
+                type="monotone"
+                dataKey={s + '_MA'}
+                stroke={colors[(idx + 8) % colors.length]}
+                name={s + ' 移動平均'}
+                dot={false}
+                strokeDasharray="5 2"
               />
             ))}
           </LineChart>
