@@ -4,7 +4,7 @@ import type { ScatterData, PlotData } from 'plotly.js'
 
 export interface SParamChartProps {
   traces: Partial<ScatterData>[]
-  format: string // 追加
+  format: 'DB' | 'MA' | 'RI' // Narrowed type for better type safety
 }
 
 function movingAverage(arr: number[], windowSize: number): number[] {
