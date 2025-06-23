@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { parseTouchstone } from './parseTouchstone'
+import { parseTouchstone } from './utils/parseTouchstone'
 import { SParamChart } from './SParamChart'
 import './App.css'
 import type { PlotData } from 'plotly.js'
