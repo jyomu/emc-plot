@@ -2,8 +2,31 @@ import Plot from 'react-plotly.js'
 import { useState } from 'react'
 import { movingAverage } from '../utils/chartUtils'
 import type { PartialPlotData } from '../types/plot'
+import type { Dash } from 'plotly.js'
 
 // PlotAreaProps: dataはPartialPlotData[]型で統一
+// spaceごとに属性を切り替える
+const spaceConfig = {
+  time: {
+    xLabel: 'Time [s]',
+    yLabel: 'Amplitude',
+    tickSuffix: '',
+    hovertemplate: '%{x}<br>%{y:.3f} <extra></extra>',
+  },
+  frequency: {
+    xLabel: 'Frequency [Hz]',
+    yLabel: 'Amplitude',
+    tickSuffix: 'Hz',
+    hovertemplate: '%{x:.2s}Hz<br>%{y:.3f} <extra></extra>',
+  },
+  cepstrum: {
+    xLabel: 'Quefrency [s]',
+    yLabel: 'Cepstrum',
+    tickSuffix: '',
+    hovertemplate: '%{x}<br>%{y:.3f} <extra></extra>',
+  },
+} as const
+
 type PlotAreaProps =
   | { space: 'time'; data: PartialPlotData[] }
   | { space: 'frequency'; data: PartialPlotData[] }
@@ -14,12 +37,7 @@ export function PlotArea(props: PlotAreaProps) {
   const [maWindow, setMaWindow] = useState(50)
 
   let traces: PartialPlotData[] = props.data
-
-  const labelMap = {
-    time: { x: 'Time [s]', y: 'Amplitude' },
-    frequency: { x: 'Frequency [Hz]', y: 'Amplitude' },
-    cepstrum: { x: 'Quefrency [s]', y: 'Cepstrum' },
-  } as const
+  const config = spaceConfig[props.space]
 
   if (showMA && maWindow && traces.length > 0) {
     const maTraces = traces
@@ -33,12 +51,23 @@ export function PlotArea(props: PlotAreaProps) {
         type: 'scatter' as const,
         mode: 'lines' as const,
         name: t.name ? `${t.name} (MA)` : 'Moving Average',
-        line: { dash: 'dash' as const, color: '#888' }
+        line: { dash: 'dash' as const }, // MAのみ点線
+        hovertemplate: config.hovertemplate,
       }))
     traces = [...traces, ...maTraces]
   }
 
-  const maxWindow = traces.length > 0 && Array.isArray(traces[0].x) ? traces[0].x.length : 1
+  // 各traceに線種を付与（MA以外は実線、色は自動）
+  const plotData = traces.map(trace => {
+    const isMA = typeof trace.name === 'string' && trace.name.includes('(MA)')
+    const dash: Dash = isMA ? 'dash' : 'solid'
+    return {
+      ...trace,
+      type: 'scatter' as const,
+      line: { dash },
+      hovertemplate: config.hovertemplate,
+    }
+  })
 
   return (
     <div>
@@ -52,7 +81,7 @@ export function PlotArea(props: PlotAreaProps) {
             <input
               type="number"
               min={1}
-              max={maxWindow}
+              max={traces.length > 0 && Array.isArray(traces[0].x) ? traces[0].x.length : 1}
               value={maWindow}
               onChange={e => setMaWindow(Number(e.target.value))}
               style={{ width: 60, marginLeft: 4 }}
@@ -61,12 +90,19 @@ export function PlotArea(props: PlotAreaProps) {
         )}
       </div>
       <Plot
-        data={traces}
+        data={plotData}
         layout={{
           autosize: true,
           height: 400,
-          xaxis: { title: { text: labelMap[props.space].x } },
-          yaxis: { title: { text: labelMap[props.space].y } },
+          xaxis: {
+            title: { text: config.xLabel },
+            tickformat: '~s',
+            ticksuffix: config.tickSuffix,
+          },
+          yaxis: {
+            title: { text: config.yLabel },
+            tickformat: '~s',
+          },
           legend: { orientation: 'h' },
           margin: { t: 30, l: 60, r: 30, b: 60 }
         }}
