@@ -26,8 +26,3 @@ export function getMaxMAWindow(plotData: Partial<PlotData>[]): number {
   }
   return 1
 }
-
-// 数値配列抽出
-export function getNumberArray(arr: unknown): number[] {
-  return Array.isArray(arr) ? arr.filter((v): v is number => typeof v === 'number') : []
-}
