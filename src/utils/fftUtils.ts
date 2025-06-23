@@ -5,24 +5,6 @@ function nextPow2(n: number): number {
   return 2 ** Math.ceil(Math.log2(n))
 }
 
-// FFT: 実数配列→複素スペクトル
-export function calcFFTTrace(input: number[]): PartialPlotData {
-  const N = nextPow2(input.length)
-  const fft = new FFT(N)
-  const out = fft.createComplexArray()
-  const data = fft.createComplexArray()
-  for (let i = 0; i < N; i++) {
-    data[2 * i] = i < input.length ? input[i] : 0
-    data[2 * i + 1] = 0
-  }
-  fft.transform(out, data)
-  const x = Array.from({ length: N }, (_, i) => i)
-  const y = Array.from({ length: N }, (_, i) => out[2 * i])
-  return {
-    x, y, name: 'FFT (Re)', meta: { space: 'frequency' }, type: 'scatter', mode: 'lines'
-  }
-}
-
 // 振幅スペクトル
 export function calcAmplitudeSpectrumTrace(input: number[]): PartialPlotData {
   const N = nextPow2(input.length)
