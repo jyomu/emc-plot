@@ -1,4 +1,6 @@
 import type { PlotData } from 'plotly.js'
 
-// アプリ全体で使うPlotData型のエイリアス
-export type PartialPlotData = Partial<PlotData>
+// Plotly.jsのPartial<PlotData>型を拡張し、metaプロパティを許可
+export type PartialPlotData = Partial<PlotData> & {
+  meta?: { space: string }
+}

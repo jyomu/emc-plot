@@ -2,7 +2,7 @@ import { useState, useMemo } from 'react'
 import type { PartialPlotData } from '../types/plot'
 import { SParamSelector } from '../components/SParamSelector'
 import { TabContent } from '../components/TabContent'
-import { calcCepstrumStagesTraces } from '../utils/fftUtils'
+import { calcAmplitudeSpectrumTrace, calcCepstrumTrace } from '../utils/fftUtils'
 
 type TouchstoneChartProps = {
   traces: PartialPlotData[]
@@ -20,7 +20,7 @@ export function TouchstoneChart({ traces }: TouchstoneChartProps) {
   const spectrumTraces = useMemo(() =>
     selectedTraces.reduce<PartialPlotData[]>((acc, t) => {
       if (t.y && Array.isArray(t.y) && t.y.every((v): v is number => typeof v === 'number')) {
-        acc.push({ ...calcCepstrumStagesTraces(t.y).amplitude, name: t.name, type: 'scatter', mode: 'lines' })
+        acc.push({ ...calcAmplitudeSpectrumTrace(t.y), name: t.name, type: 'scatter', mode: 'lines' })
       }
       return acc
     }, [])
@@ -29,7 +29,7 @@ export function TouchstoneChart({ traces }: TouchstoneChartProps) {
   const cepstrumTraces = useMemo(() =>
     selectedTraces.reduce<PartialPlotData[]>((acc, t) => {
       if (t.y && Array.isArray(t.y) && t.y.every((v): v is number => typeof v === 'number')) {
-        acc.push({ ...calcCepstrumStagesTraces(t.y).cepstrum, name: t.name, type: 'scatter', mode: 'lines' })
+        acc.push({ ...calcCepstrumTrace(t.y), name: t.name, type: 'scatter', mode: 'lines' })
       }
       return acc
     }, [])
