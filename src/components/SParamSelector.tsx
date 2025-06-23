@@ -1,6 +1,6 @@
-import type { PlotData } from 'plotly.js'
+import type { PartialPlotData } from '../types/plot'
 
-export function SParamSelector({ traces, selected, onChange }: { traces: Partial<PlotData>[]; selected: string[]; onChange: (s: string) => void }) {
+export function SParamSelector({ traces, selected, onChange }: { traces: PartialPlotData[]; selected: string[]; onChange: (s: string) => void }) {
   const sParams = traces.map(t => typeof t.name === 'string' ? t.name : '').filter(Boolean)
   return (
     <div style={{ margin: '12px 0' }}>

@@ -1,8 +1,8 @@
 import { TouchstoneChart } from './TouchstoneChart'
-import type { PlotData } from 'plotly.js'
+import type { PartialPlotData } from '../types/plot'
 
 export interface SParamChartProps {
-  traces: Partial<PlotData>[]
+  traces: PartialPlotData[]
   format: 'DB' | 'MA' | 'RI'
   converterType: 'time' | 'touchstone'
 }

@@ -1,19 +1,19 @@
 import Plot from 'react-plotly.js'
-import type { PlotData } from 'plotly.js'
 import { useState } from 'react'
 import { movingAverage } from '../utils/chartUtils'
+import type { PartialPlotData } from '../types/plot'
 
-// PlotAreaProps: dataはPartial<PlotData>[]型で統一
+// PlotAreaProps: dataはPartialPlotData[]型で統一
 type PlotAreaProps =
-  | { space: 'time'; data: Partial<PlotData>[] }
-  | { space: 'frequency'; data: Partial<PlotData>[] }
-  | { space: 'cepstrum'; data: Partial<PlotData>[] }
+  | { space: 'time'; data: PartialPlotData[] }
+  | { space: 'frequency'; data: PartialPlotData[] }
+  | { space: 'cepstrum'; data: PartialPlotData[] }
 
 export function PlotArea(props: PlotAreaProps) {
   const [showMA, setShowMA] = useState(false)
   const [maWindow, setMaWindow] = useState(50)
 
-  let traces: Partial<PlotData>[] = props.data
+  let traces: PartialPlotData[] = props.data
 
   const labelMap = {
     time: { x: 'Time [s]', y: 'Amplitude' },

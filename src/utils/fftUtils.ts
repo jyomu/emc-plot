@@ -1,8 +1,5 @@
 import FFT from 'fft.js'
-import type { PlotData } from 'plotly.js'
-
-// Plotly.jsのPartial<PlotData>型をそのまま利用
-export type PartialPlotData = Partial<PlotData>
+import type { PartialPlotData } from '../types/plot'
 
 function nextPow2(n: number): number {
   return 2 ** Math.ceil(Math.log2(n))

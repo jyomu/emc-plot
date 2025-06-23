@@ -1,8 +1,8 @@
 import { useState } from 'react'
+import type { PartialPlotData } from './types/plot'
 import { parseTouchstone } from './utils/parseTouchstone'
 import { SParamChart } from './apps/SParamChart'
 import './App.css'
-import type { PlotData } from 'plotly.js'
 
 const CONVERTER_TYPES = [
   { key: 'time', label: 'Time Domain Waveform Converter / Spectrum & Cepstrum' },
@@ -12,7 +12,7 @@ const CONVERTER_TYPES = [
 type ConverterType = typeof CONVERTER_TYPES[number]['key']
 
 function App() {
-  const [traces, setTraces] = useState<Partial<PlotData>[] | null>(null)
+  const [traces, setTraces] = useState<PartialPlotData[] | null>(null)
   const [format, setFormat] = useState<'DB' | 'MA' | 'RI'>('DB')
   const [error, setError] = useState<string | null>(null)
   const [converterType, setConverterType] = useState<ConverterType>('touchstone')

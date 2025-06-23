@@ -1,10 +1,10 @@
 import { useState, useMemo } from 'react'
-import type { PlotData } from 'plotly.js'
+import type { PartialPlotData } from '../types/plot'
 import { SParamSelector } from '../components/SParamSelector'
 import { TabContent } from '../components/TabContent'
 
 type TouchstoneChartProps = {
-  traces: Partial<PlotData>[]
+  traces: PartialPlotData[]
   format: 'DB' | 'MA' | 'RI'
 }
 
@@ -12,7 +12,7 @@ export function TouchstoneChart({ traces }: TouchstoneChartProps) {
   const sParams = traces.map(t => typeof t.name === 'string' ? t.name : '').filter(Boolean)
   const [selected, setSelected] = useState<string[]>(sParams.slice(0, 1))
 
-  // 選択された全SパラメータのPartial<PlotData>を配列で渡す
+  // 選択された全SパラメータのPartialPlotDataを配列で渡す
   const selectedTraces = useMemo(() => {
     return traces
       .filter(t => typeof t.name === 'string' && selected.includes(t.name))

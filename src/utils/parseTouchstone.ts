@@ -9,7 +9,7 @@ function getFreqMultiplier(unit: string): number {
   return opt ? opt.value : 1;
 }
 
-import type { PlotData } from 'plotly.js'
+import type { PartialPlotData } from '../types/plot'
 
 export type ChartRow = { freq: number } & { [sParam: string]: number }
 
@@ -81,7 +81,7 @@ function buildSParams(nPorts: number): string[] {
   return sParams
 }
 
-export async function parseTouchstone(file: File): Promise<TouchstoneData & { traces: Partial<PlotData>[] }> {
+export async function parseTouchstone(file: File): Promise<TouchstoneData & { traces: PartialPlotData[] }> {
   // FileReaderを使わず、readAsTextでファイル読み込み
   const text: string = await file.text();
   const filename = file.name
@@ -132,7 +132,7 @@ export async function parseTouchstone(file: File): Promise<TouchstoneData & { tr
   })
 
   // Plotly traces生成
-  const traces: Partial<PlotData>[] = sParams.map((s) => ({
+  const traces: PartialPlotData[] = sParams.map((s) => ({
     x: chartData.map(row => row.freq),
     y: chartData.map(row => row[s]),
     type: 'scatter',

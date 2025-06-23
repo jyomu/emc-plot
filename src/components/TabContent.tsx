@@ -1,9 +1,9 @@
 import { PlotArea } from './PlotArea'
 import { calcCepstrumStagesTraces } from '../utils/fftUtils'
-import type { PlotData } from 'plotly.js'
+import type { PartialPlotData } from '../types/plot'
 
 interface TabContentProps {
-  signal: Partial<PlotData>[]
+  signal: PartialPlotData[]
 }
 
 function isNumberArray(arr: unknown): arr is number[] {
