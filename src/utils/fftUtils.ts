@@ -1,32 +1,38 @@
-import FFT from 'fft.js'
 import type { PartialPlotData } from '../types/plot'
 
-function nextPow2(n: number): number {
-  return 2 ** Math.ceil(Math.log2(n))
+// DFT
+function dft(input: number[]): { re: number[]; im: number[] } {
+  const N = input.length
+  const re = new Array(N).fill(0)
+  const im = new Array(N).fill(0)
+  for (let k = 0; k < N; k++) {
+    for (let n = 0; n < N; n++) {
+      const angle = (-2 * Math.PI * k * n) / N
+      re[k] += input[n] * Math.cos(angle)
+      im[k] += input[n] * Math.sin(angle)
+    }
+  }
+  return { re, im }
 }
 
-function fftMagnitude(input: number[]): number[] {
-  const N = nextPow2(input.length)
-  const fft = new FFT(N)
-  const out = fft.createComplexArray()
-  const data = fft.createComplexArray()
-  for (let i = 0; i < N; i++) {
-    data[2 * i] = i < input.length ? input[i] : 0
-    data[2 * i + 1] = 0
+// IDFT
+function idft(re: number[], im: number[]): number[] {
+  const N = re.length
+  const out = new Array(N).fill(0)
+  for (let n = 0; n < N; n++) {
+    for (let k = 0; k < N; k++) {
+      const angle = (2 * Math.PI * k * n) / N
+      out[n] += re[k] * Math.cos(angle) - im[k] * Math.sin(angle)
+    }
+    out[n] /= N
   }
-  fft.transform(out, data)
-  const spectrum = []
-  for (let i = 0; i < N / 2; i++) {
-    const re = out[2 * i]
-    const im = out[2 * i + 1]
-    spectrum.push(Math.sqrt(re * re + im * im))
-  }
-  return spectrum
+  return out
 }
 
 // 振幅スペクトル
 export function calcAmplitudeSpectrumTrace(input: PartialPlotData): PartialPlotData {
-  const spectrum = fftMagnitude(input.y)
+  const { re, im } = dft(input.y)
+  const spectrum = re.map((r, i) => Math.sqrt(r * r + im[i] * im[i]))
   const x = Array.from({ length: spectrum.length }, (_, i) => i)
   return {
     x,
@@ -40,8 +46,8 @@ export function calcAmplitudeSpectrumTrace(input: PartialPlotData): PartialPlotD
 
 // 対数スペクトル
 export function calcLogSpectrumTrace(input: PartialPlotData): PartialPlotData {
-  const spectrum = fftMagnitude(input.y)
-  const logSpec = spectrum.map(mag => Math.log(mag + 1e-12))
+  const { re, im } = dft(input.y)
+  const logSpec = re.map((r, i) => Math.log(Math.sqrt(r * r + im[i] * im[i]) + 1e-12))
   const x = Array.from({ length: logSpec.length }, (_, i) => i)
   return {
     x,
@@ -56,17 +62,10 @@ export function calcLogSpectrumTrace(input: PartialPlotData): PartialPlotData {
 // ケプストラム
 export function calcCepstrumTrace(input: PartialPlotData): PartialPlotData {
   const logSpec = calcLogSpectrumTrace(input)
-  const y = logSpec.y
-  const N = y.length
-  const fft = new FFT(N)
-  const out = fft.createComplexArray()
-  const data = fft.createComplexArray()
-  for (let i = 0; i < N; i++) {
-    data[2 * i] = y[i]
-    data[2 * i + 1] = 0
-  }
-  fft.inverseTransform(out, data)
-  const cepstrum = Array.from({ length: N }, (_, i) => out[2 * i])
+  const { re, im } = dft(logSpec.y)
+  const N = re.length
+  // IDFTで実部のみ
+  const cepstrum = idft(re, im)
   return {
     x: Array.from({ length: N }, (_, i) => i),
     y: cepstrum,
@@ -79,9 +78,9 @@ export function calcCepstrumTrace(input: PartialPlotData): PartialPlotData {
 
 // IFFT（スペクトラム→時系列）
 export function calcIFFTTrace(input: PartialPlotData): PartialPlotData {
-  const N = input.y.length * 2
-  // FFT.jsの仕様: Nは2以上かつ2のべき乗
-  if (N < 2 || (N & (N - 1)) !== 0) {
+  // input.y: 振幅スペクトル（実数配列）→虚部0としてIDFT
+  const N = input.y.length
+  if (N < 1) {
     return {
       x: [],
       y: [],
@@ -91,22 +90,11 @@ export function calcIFFTTrace(input: PartialPlotData): PartialPlotData {
       mode: 'lines',
     }
   }
-  const fft = new FFT(N)
-  const out = fft.createComplexArray()
-  const data = fft.createComplexArray()
-  for (let i = 0; i < input.y.length; i++) {
-    data[2 * i] = input.y[i]
-    data[2 * i + 1] = 0
-  }
-  for (let i = input.y.length; i < N; i++) {
-    data[2 * i] = 0
-    data[2 * i + 1] = 0
-  }
-  fft.inverseTransform(out, data)
-  const time = Array.from({ length: N }, (_, i) => i)
-  const y = Array.from({ length: N }, (_, i) => out[2 * i])
+  const re = input.y.slice()
+  const im = new Array(N).fill(0)
+  const y = idft(re, im)
   return {
-    x: time,
+    x: Array.from({ length: N }, (_, i) => i),
     y,
     name: (input.name ?? '') + ' (IFFT)',
     meta: { ...input.meta, space: 'time' },
