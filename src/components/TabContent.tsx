@@ -35,34 +35,19 @@ export function TabContent({
   const processedSignals = signal.map(sig => showMA ? movingAverage(sig, maWindow) : sig)
   const stages = processedSignals.map(sig => calcCepstrumStages(sig, preProcess))
 
-  // 3つのグラフを縦に並べて常時表示
-  const spectrumPlotData = stages.map((stage, idx) => ({
-    x: stage.amplitude.map((_, i) => i),
-    y: stage.amplitude,
-    type: 'scatter' as const,
-    mode: 'lines' as const,
-    name: `S${idx + 1}`
-  }))
-  const preProcessedPlotData = stages.map((stage, idx) => ({
-    x: stage.preProcessed.map((_, i) => i),
-    y: stage.preProcessed,
-    type: 'scatter' as const,
-    mode: 'lines' as const,
-    name: `S${idx + 1}`
-  }))
-  const cepstrumPlotData = stages.map((stage, idx) => ({
-    x: stage.cepstrum.map((_, i) => i),
-    y: stage.cepstrum,
-    type: 'scatter' as const,
-    mode: 'lines' as const,
-    name: `S${idx + 1}`
-  }))
-
   return (
     <>
       <div style={{ marginBottom: 24 }}>
         <h4 style={{ margin: '8px 0' }}>スペクトラム</h4>
-        <PlotArea plotData={spectrumPlotData} />
+        {stages.map((stage, idx) => (
+          <PlotArea
+            key={`spectrum-${idx}`}
+            space="frequency"
+            data={{ f: stage.amplitude.map((_, i) => i), Y: stage.amplitude }}
+            xLabel="Frequency [Hz]"
+            yLabel="Amplitude"
+          />
+        ))}
       </div>
       <div style={{ marginBottom: 24 }}>
         <h4 style={{ margin: '8px 0' }}>前処理後</h4>
@@ -74,11 +59,27 @@ export function TabContent({
             ))}
           </select>
         </div>
-        <PlotArea plotData={preProcessedPlotData} />
+        {stages.map((stage, idx) => (
+          <PlotArea
+            key={`preprocessed-${idx}`}
+            space="frequency"
+            data={{ f: stage.preProcessed.map((_, i) => i), Y: stage.preProcessed }}
+            xLabel="Frequency [Hz]"
+            yLabel="Pre-processed"
+          />
+        ))}
       </div>
       <div style={{ marginBottom: 24 }}>
         <h4 style={{ margin: '8px 0' }}>ケプストラム</h4>
-        <PlotArea plotData={cepstrumPlotData} />
+        {stages.map((stage, idx) => (
+          <PlotArea
+            key={`cepstrum-${idx}`}
+            space="cepstrum"
+            data={{ q: stage.cepstrum.map((_, i) => i), C: stage.cepstrum }}
+            xLabel="Quefrency [s]"
+            yLabel="Cepstrum"
+          />
+        ))}
       </div>
       <div style={{ marginTop: 8 }}>
         <MovingAverageControl
