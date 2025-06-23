@@ -76,3 +76,41 @@ export function calcCepstrumTrace(input: PartialPlotData): PartialPlotData {
     mode: 'lines',
   }
 }
+
+// IFFT（スペクトラム→時系列）
+export function calcIFFTTrace(input: PartialPlotData): PartialPlotData {
+  const N = input.y.length * 2
+  // FFT.jsの仕様: Nは2以上かつ2のべき乗
+  if (N < 2 || (N & (N - 1)) !== 0) {
+    return {
+      x: [],
+      y: [],
+      name: (input.name ?? '') + ' (IFFT)',
+      meta: { ...input.meta, space: 'time' },
+      type: 'scatter',
+      mode: 'lines',
+    }
+  }
+  const fft = new FFT(N)
+  const out = fft.createComplexArray()
+  const data = fft.createComplexArray()
+  for (let i = 0; i < input.y.length; i++) {
+    data[2 * i] = input.y[i]
+    data[2 * i + 1] = 0
+  }
+  for (let i = input.y.length; i < N; i++) {
+    data[2 * i] = 0
+    data[2 * i + 1] = 0
+  }
+  fft.inverseTransform(out, data)
+  const time = Array.from({ length: N }, (_, i) => i)
+  const y = Array.from({ length: N }, (_, i) => out[2 * i])
+  return {
+    x: time,
+    y,
+    name: (input.name ?? '') + ' (IFFT)',
+    meta: { ...input.meta, space: 'time' },
+    type: 'scatter',
+    mode: 'lines',
+  }
+}
