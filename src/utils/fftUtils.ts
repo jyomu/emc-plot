@@ -44,7 +44,7 @@ export function calcIFFTTrace(input: PartialPlotData): PartialPlotData {
     x: Array.from({ length: N }, (_, i) => i),
     y,
     name: (input.name ?? '') + ' (IFFT)',
-    meta: { ...input.meta, space: 'time' },
+    meta: { ...(input.meta ?? {}), space: 'time' },
     type: 'scatter',
     mode: 'lines',
   }
