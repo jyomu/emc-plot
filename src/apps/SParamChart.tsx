@@ -3,7 +3,7 @@ import type { PartialPlotData } from '../types/plot'
 import { SParamSelector } from '../components/SParamSelector'
 import { PlotArea } from '../components/PlotArea'
 import { parseTouchstone } from '../utils/parseTouchstone'
-import { calcCepstrumTrace, calcIFFTTrace } from '../utils/fftUtils'
+import { calcIFFTTrace, dft, idft } from '../utils/fftUtils'
 
 const tabDefs = [
   { key: 'spectrum', label: 'スペクトラム' },
@@ -19,10 +19,27 @@ export function SParamChart() {
   const [selected, setSelected] = useState<string[]>([])
   const [tab, setTab] = useState<TabKey>('spectrum')
 
-  const selectedTraces = traces ? traces.filter(t => typeof t.name === 'string' && selected.includes(t.name)) : []
-  const spectrumTraces = selectedTraces // そのまま周波数領域データとして使う
-  const cepstrumTraces = selectedTraces.map(t => calcCepstrumTrace(t))
-  const timeTraces = selectedTraces.map(t => calcIFFTTrace(t))
+  // 選択されたtrace（周波数領域データ）
+  const spectrumTraces = traces?.filter(t => typeof t.name === 'string' && selected.includes(t.name)) ?? []
+  // IFFTで時系列化
+  const timeTraces = spectrumTraces.map(t => calcIFFTTrace(t))
+  // ケプストラムはスペクトラム（周波数領域データ）から直接計算（DFT不要）
+  const cepstrumTraces = spectrumTraces.map((t): PartialPlotData => {
+    // logスペクトル（t.yは既にスペクトル）
+    const logSpec = t.y.map((v: number) => Math.log(Math.abs(v) + 1e-12))
+    // logスペクトルのDFT
+    const { re: cre, im: cim } = dft(logSpec)
+    // IDFTでケプストラム（実部のみ）
+    const cepstrum = idft(cre, cim)
+    return {
+      x: Array.from({ length: cepstrum.length }, (_, i) => i),
+      y: cepstrum,
+      name: t.name ? t.name + ' Cepstrum' : 'Cepstrum',
+      meta: { ...t.meta, space: 'cepstrum' },
+      type: 'scatter' as const,
+      mode: 'lines' as const,
+    }
+  })
 
   let content = null
   if (tab === 'spectrum') {
@@ -41,7 +58,7 @@ export function SParamChart() {
         try {
           const traces = await parseTouchstone(file)
           setTraces(traces)
-          setSelected(traces.map(t => typeof t.name === 'string' ? t.name : '').filter(Boolean).slice(0, 1))
+          setSelected(traces.map(t => typeof t.name === 'string' && t.name ? t.name : '').filter(Boolean).slice(0, 1))
           setError(null)
         } catch (err) {
           setError('パースエラー: ' + (err instanceof Error ? err.message : String(err)))
