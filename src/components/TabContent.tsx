@@ -1,12 +1,22 @@
 import { PlotArea } from './PlotArea'
-import { calcCepstrumStages } from '../utils/fftUtils'
+import { calcCepstrumStagesTraces } from '../utils/fftUtils'
+import type { PlotData } from 'plotly.js'
 
 interface TabContentProps {
-  signal: number[][]
+  signal: Partial<PlotData>[]
+}
+
+function isNumberArray(arr: unknown): arr is number[] {
+  return Array.isArray(arr) && arr.every(v => typeof v === 'number')
 }
 
 export function TabContent({ signal }: TabContentProps) {
-  const stages = signal.map(sig => calcCepstrumStages(sig))
+  // yがnumber[]のtraceのみ処理
+  const stages = signal
+    .map(sig => isNumberArray(sig.y)
+      ? calcCepstrumStagesTraces(sig.y)
+      : null)
+    .filter((s): s is NonNullable<typeof s> => !!s)
 
   return (
     <>
@@ -15,11 +25,10 @@ export function TabContent({ signal }: TabContentProps) {
         <PlotArea
           space="frequency"
           data={stages.map((stage, idx) => ({
-            x: stage.amplitude.map((_, i) => i),
-            y: stage.amplitude,
+            ...stage.amplitude,
+            name: signal[idx]?.name ?? `S${idx + 1}`,
             type: 'scatter',
             mode: 'lines',
-            name: `S${idx + 1}`
           }))}
         />
       </div>
@@ -28,11 +37,10 @@ export function TabContent({ signal }: TabContentProps) {
         <PlotArea
           space="cepstrum"
           data={stages.map((stage, idx) => ({
-            x: stage.cepstrum.map((_, i) => i),
-            y: stage.cepstrum,
+            ...stage.cepstrum,
+            name: signal[idx]?.name ?? `S${idx + 1}`,
             type: 'scatter',
             mode: 'lines',
-            name: `S${idx + 1}`
           }))}
         />
       </div>

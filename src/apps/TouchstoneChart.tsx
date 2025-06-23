@@ -12,19 +12,17 @@ export function TouchstoneChart({ traces }: TouchstoneChartProps) {
   const sParams = traces.map(t => typeof t.name === 'string' ? t.name : '').filter(Boolean)
   const [selected, setSelected] = useState<string[]>(sParams.slice(0, 1))
 
-  // 選択された全Sパラメータの信号系列を配列で渡す
-  const signals = useMemo(() => {
+  // 選択された全SパラメータのPartial<PlotData>を配列で渡す
+  const selectedTraces = useMemo(() => {
     return traces
       .filter(t => typeof t.name === 'string' && selected.includes(t.name))
-      .map(t => Array.isArray(t?.y) ? t.y.filter((v): v is number => typeof v === 'number') : [])
-      .filter(arr => arr.length > 0)
   }, [traces, selected])
 
   return (
     <>
       <SParamSelector traces={traces} selected={selected} onChange={(s: string) => setSelected(prev => prev.includes(s) ? prev.filter(x => x !== s) : [...prev, s])} />
       <TabContent
-        signal={signals}
+        signal={selectedTraces}
       />
     </>
   )
