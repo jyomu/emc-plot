@@ -5,19 +5,15 @@ import { PlotArea } from '../components/PlotArea'
 import { parseTouchstone } from '../utils/parseTouchstone'
 import { calcIFFTTrace, calcCepstrumFromSpectrumTrace } from '../utils/fftUtils'
 
-const tabDefs = [
-  { key: 'spectrum', label: 'スペクトラム' },
-  { key: 'time', label: '時系列（IFFT）' },
-  { key: 'cepstrum', label: 'ケプストラム' },
-] as const
-
-type TabKey = typeof tabDefs[number]['key']
-
 export function SParamChart() {
   const [traces, setTraces] = useState<PartialPlotData[] | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [selected, setSelected] = useState<string[]>([])
-  const [tab, setTab] = useState<TabKey>('spectrum')
+
+  // 各空間の表示state（チェックボックスで制御）
+  const [showSpectrum, setShowSpectrum] = useState(true)
+  const [showTime, setShowTime] = useState(true)
+  const [showCepstrum, setShowCepstrum] = useState(true)
 
   // 選択されたtrace（周波数領域データ）
   const spectrumTraces = traces?.filter(t => typeof t.name === 'string' && selected.includes(t.name)) ?? []
@@ -25,15 +21,6 @@ export function SParamChart() {
   const timeTraces = spectrumTraces.map(t => calcIFFTTrace(t))
   // ケプストラムはスペクトラム（周波数領域データ）から直接計算
   const cepstrumTraces = spectrumTraces.map(t => calcCepstrumFromSpectrumTrace(t))
-
-  let content = null
-  if (tab === 'spectrum') {
-    content = <PlotArea space="frequency" data={spectrumTraces} />
-  } else if (tab === 'time') {
-    content = <PlotArea space="time" data={timeTraces} />
-  } else if (tab === 'cepstrum') {
-    content = <PlotArea space="cepstrum" data={cepstrumTraces} />
-  }
 
   return (
     <>
@@ -52,13 +39,37 @@ export function SParamChart() {
       {traces && (
         <>
           <SParamSelector traces={traces} selected={selected} onChange={(s: string) => setSelected(prev => prev.includes(s) ? prev.filter(x => x !== s) : [...prev, s])} />
-          <div style={{ display: 'flex', gap: 8, margin: '12px 0' }}>
-            {tabDefs.map(t => (
-              <button key={t.key} onClick={() => setTab(t.key)} disabled={tab === t.key}>{t.label}</button>
-            ))}
-          </div>
-          <div style={{ marginBottom: 24 }}>
-            {content}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 32, margin: '24px 0' }}>
+            {/* スペクトラム空間 */}
+            <div>
+              <div style={{ fontWeight: 'bold', marginBottom: 4, display: 'flex', alignItems: 'center', gap: 8 }}>
+                <label>
+                  <input type="checkbox" checked={showSpectrum} onChange={e => setShowSpectrum(e.target.checked)} />
+                  スペクトラム
+                </label>
+              </div>
+              {showSpectrum && <PlotArea space="frequency" data={spectrumTraces} />}
+            </div>
+            {/* 時系列空間 */}
+            <div>
+              <div style={{ fontWeight: 'bold', marginBottom: 4, display: 'flex', alignItems: 'center', gap: 8 }}>
+                <label>
+                  <input type="checkbox" checked={showTime} onChange={e => setShowTime(e.target.checked)} />
+                  時系列（IFFT）
+                </label>
+              </div>
+              {showTime && <PlotArea space="time" data={timeTraces} />}
+            </div>
+            {/* ケプストラム空間 */}
+            <div>
+              <div style={{ fontWeight: 'bold', marginBottom: 4, display: 'flex', alignItems: 'center', gap: 8 }}>
+                <label>
+                  <input type="checkbox" checked={showCepstrum} onChange={e => setShowCepstrum(e.target.checked)} />
+                  ケプストラム
+                </label>
+              </div>
+              {showCepstrum && <PlotArea space="cepstrum" data={cepstrumTraces} />}
+            </div>
           </div>
         </>
       )}
