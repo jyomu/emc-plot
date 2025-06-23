@@ -140,7 +140,6 @@ export async function parseTouchstone(file: File): Promise<PartialPlotData[]> {
     mode: 'lines',
     name: s,
     meta: { ...baseMeta },
-    line: { color: '#8884d8' }
   }))
 
   return traces

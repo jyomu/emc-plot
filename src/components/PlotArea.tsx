@@ -10,7 +10,7 @@ const spaceConfig = {
   time: {
     xLabel: 'Time [s]',
     yLabel: 'Amplitude',
-    tickSuffix: '',
+    tickSuffix: 's',
     hovertemplate: '%{x}<br>%{y:.3f} <extra></extra>',
   },
   frequency: {
@@ -22,7 +22,7 @@ const spaceConfig = {
   cepstrum: {
     xLabel: 'Quefrency [s]',
     yLabel: 'Cepstrum',
-    tickSuffix: '',
+    tickSuffix: 's',
     hovertemplate: '%{x}<br>%{y:.3f} <extra></extra>',
   },
 } as const
