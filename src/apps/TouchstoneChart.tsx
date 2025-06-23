@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react'
 import type { PlotData } from 'plotly.js'
-import { SParamSelector } from './SParamSelector'
-import { TabContent } from './TabContent'
+import { SParamSelector } from '../components/SParamSelector'
+import { TabContent } from '../components/TabContent'
 
 type TouchstoneChartProps = {
   traces: Partial<PlotData>[]
