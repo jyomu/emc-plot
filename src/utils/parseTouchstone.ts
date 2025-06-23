@@ -133,19 +133,29 @@ class TouchstoneDocument {
     const nSamples = Math.floor(this.dataArray.allNums.length / (1 + this.nPorts * this.nPorts * 2));
     return this.sParams.map((sParamKey) => {
       const x = Array.from({ length: nSamples }, (_, sampleIdx) => this.dataArray.getFreq(sampleIdx));
-      const y = Array.from({ length: nSamples }, (_, sampleIdx) => {
+      const y: number[] = [];
+      const yIm: number[] = [];
+      for (let sampleIdx = 0; sampleIdx < nSamples; ++sampleIdx) {
         const { mag, phase } = this.dataArray.getMagPhaseByKey(sampleIdx, sParamKey);
+        // y: 振幅
         let value = mag;
         if (format === 'MA') {
           // MA: mag=振幅, phase=位相（度）
         } else if (format === 'RI') {
           value = Math.sqrt(mag * mag + phase * phase);
         }
-        return value;
-      });
+        y.push(value);
+        // yIm: 位相
+        if (format === 'DB' || format === 'MA') {
+          yIm.push(phase); // DB/MA: 位相（度）
+        } else if (format === 'RI') {
+          yIm.push(Math.atan2(phase, mag)); // RI: arctan(phase/mag) [ラジアン]
+        }
+      }
       return {
         x,
         y,
+        yIm,
         type: 'scatter',
         mode: 'lines',
         name: sParamKey,
