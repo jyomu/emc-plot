@@ -81,7 +81,7 @@ function buildSParams(nPorts: number): string[] {
   return sParams
 }
 
-export async function parseTouchstone(file: File): Promise<TouchstoneData & { traces: PartialPlotData[] }> {
+export async function parseTouchstone(file: File): Promise<PartialPlotData[]> {
   // FileReaderを使わず、readAsTextでファイル読み込み
   const text: string = await file.text();
   const filename = file.name
@@ -132,14 +132,16 @@ export async function parseTouchstone(file: File): Promise<TouchstoneData & { tr
   })
 
   // Plotly traces生成
+  const baseMeta = { space: 'frequency', format, freqUnit, nPorts, sParams, z0 };
   const traces: PartialPlotData[] = sParams.map((s) => ({
     x: chartData.map(row => row.freq),
     y: chartData.map(row => row[s]),
     type: 'scatter',
     mode: 'lines',
     name: s,
+    meta: { ...baseMeta },
     line: { color: '#8884d8' }
   }))
 
-  return { chartData, sParams, nPorts, freqUnit, format, z0, traces }
+  return traces
 }

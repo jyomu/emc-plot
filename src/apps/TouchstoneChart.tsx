@@ -6,7 +6,6 @@ import { calcAmplitudeSpectrumTrace, calcCepstrumTrace } from '../utils/fftUtils
 
 type TouchstoneChartProps = {
   traces: PartialPlotData[]
-  format: 'DB' | 'MA' | 'RI'
 }
 
 export function TouchstoneChart({ traces }: TouchstoneChartProps) {

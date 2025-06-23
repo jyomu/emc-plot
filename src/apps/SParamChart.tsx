@@ -3,13 +3,12 @@ import type { PartialPlotData } from '../types/plot'
 
 export interface SParamChartProps {
   traces: PartialPlotData[]
-  format: 'DB' | 'MA' | 'RI'
   converterType: 'time' | 'touchstone'
 }
 
-export function SParamChart({ traces, format, converterType }: SParamChartProps) {
+export function SParamChart({ traces, converterType }: SParamChartProps) {
   if (converterType === 'touchstone') {
-    return <TouchstoneChart traces={traces} format={format} />
+    return <TouchstoneChart traces={traces} />
   }
   if (converterType === 'time') {
     return (

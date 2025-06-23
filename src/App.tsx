@@ -13,7 +13,6 @@ type ConverterType = typeof CONVERTER_TYPES[number]['key']
 
 function App() {
   const [traces, setTraces] = useState<PartialPlotData[] | null>(null)
-  const [format, setFormat] = useState<'DB' | 'MA' | 'RI'>('DB')
   const [error, setError] = useState<string | null>(null)
   const [converterType, setConverterType] = useState<ConverterType>('touchstone')
 
@@ -37,16 +36,15 @@ function App() {
             const file = e.target.files?.[0]
             if (!file) return
             try {
-              const parsed = await parseTouchstone(file)
-              setTraces(parsed.traces)
-              setFormat(parsed.format)
+              const traces = await parseTouchstone(file)
+              setTraces(traces)
               setError(null)
             } catch (err) {
               setError('パースエラー: ' + (err instanceof Error ? err.message : String(err)))
             }
           }} />
           {traces && (
-            <SParamChart traces={traces} format={format} converterType={converterType} />
+            <SParamChart traces={traces} converterType={converterType} />
           )}
         </>
       )}
