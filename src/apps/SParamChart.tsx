@@ -3,7 +3,7 @@ import type { PartialPlotData } from '../types/plot'
 import { SParamSelector } from '../components/SParamSelector'
 import { PlotArea } from '../components/PlotArea'
 import { parseTouchstone } from '../utils/parseTouchstone'
-import { calcIFFTTrace, calcCepstrumFromSpectrumTrace } from '../utils/fftUtils'
+import { calcIDFTTrace, calcCepstrumFromSpectrumTrace } from '../utils/fftUtils'
 import { movingAverage } from '../utils/chartUtils'
 
 export function SParamChart() {
@@ -28,8 +28,8 @@ export function SParamChart() {
   const spectrumTraces = maEnabled && maWindow > 1
     ? spectrumTracesRaw.map(t => ({ ...t, y: movingAverage(t.y, maWindow) }))
     : spectrumTracesRaw
-  // IFFTで時系列化
-  const timeTraces = spectrumTraces.map(t => calcIFFTTrace(t))
+  // IDFTで時系列化
+  const timeTraces = spectrumTraces.map(t => calcIDFTTrace(t))
   // ケプストラムはスペクトラム（周波数領域データ）から直接計算
   const cepstrumTraces = spectrumTraces.map(t => calcCepstrumFromSpectrumTrace(t, logType))
 
@@ -94,7 +94,7 @@ export function SParamChart() {
               <div style={{ fontWeight: 'bold', marginBottom: 4, display: 'flex', alignItems: 'center', gap: 8 }}>
                 <label>
                   <input type="checkbox" checked={showTime} onChange={e => setShowTime(e.target.checked)} />
-                  時系列（IFFT）
+                  時系列（IDFT）
                 </label>
               </div>
               {showTime && <PlotArea space="time" data={timeTraces} />}

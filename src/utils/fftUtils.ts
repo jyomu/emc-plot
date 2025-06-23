@@ -33,9 +33,9 @@ export function idft(re: number[], im: number[]): number[] {
   return out
 }
 
-// IFFT（スペクトラム→時系列）を計算し、PartialPlotDataとして返す
+// IDFT（スペクトラム→時系列）を計算し、PartialPlotDataとして返す
 // input.y: 振幅スペクトル（実数配列）→ 虚部0としてIDFT
-export function calcIFFTTrace(input: PartialPlotData): PartialPlotData {
+export function calcIDFTTrace(input: PartialPlotData): PartialPlotData {
   const N = input.y.length
   const re = input.y.slice()
   const im = new Array(N).fill(0)
@@ -43,7 +43,7 @@ export function calcIFFTTrace(input: PartialPlotData): PartialPlotData {
   return {
     x: Array.from({ length: N }, (_, i) => i),
     y,
-    name: (input.name ?? '') + ' (IFFT)',
+    name: (input.name ?? '') + ' (IDFT)',
     meta: { ...(input.meta ?? {}), space: 'time' },
     type: 'scatter',
     mode: 'lines',
