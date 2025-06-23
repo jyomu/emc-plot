@@ -3,6 +3,7 @@ import { useState } from 'react'
 import { movingAverage } from '../utils/chartUtils'
 import type { PartialPlotData } from '../types/plot'
 import type { Dash } from 'plotly.js'
+import { MovingAverageControl } from '../components/MovingAverageControl'
 
 // PlotAreaProps: dataはPartialPlotData[]型で統一
 // spaceごとに属性を切り替える
@@ -71,24 +72,12 @@ export function PlotArea(props: PlotAreaProps) {
 
   return (
     <div>
-      <div style={{ margin: '12px 0' }}>
-        <label>
-          <input type="checkbox" checked={showMA} onChange={e => setShowMA(e.target.checked)} /> 移動平均を表示
-        </label>
-        {showMA && (
-          <span style={{ marginLeft: 12 }}>
-            ウィンドウサイズ:
-            <input
-              type="number"
-              min={1}
-              max={traces.length > 0 && Array.isArray(traces[0].x) ? traces[0].x.length : 1}
-              value={maWindow}
-              onChange={e => setMaWindow(Number(e.target.value))}
-              style={{ width: 60, marginLeft: 4 }}
-            />
-          </span>
-        )}
-      </div>
+      <MovingAverageControl
+        showMA={showMA}
+        setShowMA={setShowMA}
+        maWindow={maWindow}
+        setMaWindow={setMaWindow}
+      />
       <Plot
         data={plotData}
         layout={{

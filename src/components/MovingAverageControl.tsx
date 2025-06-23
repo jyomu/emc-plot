@@ -3,10 +3,9 @@ interface MovingAverageControlProps {
   setShowMA: (b: boolean) => void
   maWindow: number
   setMaWindow: (n: number) => void
-  maxWindow: number
 }
 
-export function MovingAverageControl({ showMA, setShowMA, maWindow, setMaWindow, maxWindow }: MovingAverageControlProps) {
+export function MovingAverageControl({ showMA, setShowMA, maWindow, setMaWindow }: MovingAverageControlProps) {
   return (
     <div style={{ margin: '12px 0' }}>
       <label>
@@ -18,7 +17,6 @@ export function MovingAverageControl({ showMA, setShowMA, maWindow, setMaWindow,
           <input
             type="number"
             min={1}
-            max={maxWindow}
             value={maWindow}
             onChange={e => setMaWindow(Number(e.target.value))}
             style={{ width: 60, marginLeft: 4 }}
