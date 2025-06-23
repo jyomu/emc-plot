@@ -1,8 +1,8 @@
 import { useState } from 'react'
 import { PlotArea } from './PlotArea'
 import { MovingAverageControl } from './MovingAverageControl'
-import { calcCepstrumStages } from './utils/fftUtils'
-import { movingAverage } from './utils/chartUtils'
+import { calcCepstrumStages } from '../utils/fftUtils'
+import { movingAverage } from '../utils/chartUtils'
 
 interface TabContentProps {
   signal: number[][]
