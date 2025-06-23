@@ -3,7 +3,7 @@ import type { PartialPlotData } from '../types/plot'
 import { SParamSelector } from '../components/SParamSelector'
 import { PlotArea } from '../components/PlotArea'
 import { parseTouchstone } from '../utils/parseTouchstone'
-import { calcIFFTTrace, dft, idft } from '../utils/fftUtils'
+import { calcIFFTTrace, calcCepstrumFromSpectrumTrace } from '../utils/fftUtils'
 
 const tabDefs = [
   { key: 'spectrum', label: 'スペクトラム' },
@@ -23,23 +23,8 @@ export function SParamChart() {
   const spectrumTraces = traces?.filter(t => typeof t.name === 'string' && selected.includes(t.name)) ?? []
   // IFFTで時系列化
   const timeTraces = spectrumTraces.map(t => calcIFFTTrace(t))
-  // ケプストラムはスペクトラム（周波数領域データ）から直接計算（DFT不要）
-  const cepstrumTraces = spectrumTraces.map((t): PartialPlotData => {
-    // logスペクトル（t.yは既にスペクトル）
-    const logSpec = t.y.map((v: number) => Math.log(Math.abs(v) + 1e-12))
-    // logスペクトルのDFT
-    const { re: cre, im: cim } = dft(logSpec)
-    // IDFTでケプストラム（実部のみ）
-    const cepstrum = idft(cre, cim)
-    return {
-      x: Array.from({ length: cepstrum.length }, (_, i) => i),
-      y: cepstrum,
-      name: t.name ? t.name + ' Cepstrum' : 'Cepstrum',
-      meta: { ...t.meta, space: 'cepstrum' },
-      type: 'scatter' as const,
-      mode: 'lines' as const,
-    }
-  })
+  // ケプストラムはスペクトラム（周波数領域データ）から直接計算
+  const cepstrumTraces = spectrumTraces.map(t => calcCepstrumFromSpectrumTrace(t))
 
   let content = null
   if (tab === 'spectrum') {

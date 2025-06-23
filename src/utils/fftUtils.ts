@@ -49,3 +49,21 @@ export function calcIFFTTrace(input: PartialPlotData): PartialPlotData {
     mode: 'lines',
   }
 }
+
+// スペクトル（実数配列）からケプストラムを計算しPartialPlotDataで返す
+export function calcCepstrumFromSpectrumTrace(spectrum: PartialPlotData): PartialPlotData {
+  // logスペクトル
+  const logSpec = spectrum.y.map((v: number) => Math.log(Math.abs(v) + 1e-12))
+  // logスペクトルのDFT
+  const { re: cre, im: cim } = dft(logSpec)
+  // IDFTでケプストラム（実部のみ）
+  const cepstrum = idft(cre, cim)
+  return {
+    x: Array.from({ length: cepstrum.length }, (_, i) => i),
+    y: cepstrum,
+    name: spectrum.name ? spectrum.name + ' Cepstrum' : 'Cepstrum',
+    meta: { ...spectrum.meta, space: 'cepstrum' },
+    type: 'scatter',
+    mode: 'lines',
+  }
+}
