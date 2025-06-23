@@ -12,17 +12,3 @@ export function movingAverage(arr: number[], windowSize: number): number[] {
     return window.reduce((sum, v) => sum + v, 0) / window.length
   })
 }
-
-// Plotlyデータ配列から最大ウィンドウサイズを取得
-import type { PlotData } from 'plotly.js'
-export function getMaxMAWindow(plotData: Partial<PlotData>[]): number {
-  const first = plotData[0]
-  if (
-    first &&
-    Array.isArray(first.x) &&
-    first.x.every(v => typeof v === 'number')
-  ) {
-    return first.x.length
-  }
-  return 1
-}
