@@ -50,9 +50,9 @@ export class TouchstoneParser {
 
   static buildSParams(nPorts: number): string[] {
     const sParams: string[] = []
-    for (let i = 1; i <= nPorts; ++i) {
-      for (let j = 1; j <= nPorts; ++j) {
-        sParams.push(`S${i}${j}`)
+    for (let rowPort = 1; rowPort <= nPorts; ++rowPort) {
+      for (let colPort = 1; colPort <= nPorts; ++colPort) {
+        sParams.push(`S${rowPort}${colPort}`)
       }
     }
     return sParams
@@ -88,21 +88,19 @@ export class TouchstoneParser {
     const sampleLen = 1 + nPorts * nPorts * 2
     const nSamples = Math.floor(allNums.length / sampleLen)
     const sParams = TouchstoneParser.buildSParams(nPorts)
-    const dataArr = new TouchstoneDataArray(allNums, nPorts, sampleLen, sParams)
+    const dataArr = new TouchstoneDataArray(allNums, nPorts, sampleLen)
     const chartData: ChartRow[] = Array.from({ length: nSamples }, (_, sampleIdx) => {
       const freq = TouchstoneParser.getFreqMultiplier(freqUnit) * dataArr.getFreq(sampleIdx)
       const row: ChartRow = { freq }
-      for (let rowPort = 1; rowPort <= nPorts; ++rowPort) {
-        for (let colPort = 1; colPort <= nPorts; ++colPort) {
-          const { mag, phase } = dataArr.getMagPhase(sampleIdx, rowPort, colPort)
-          let value = mag
-          if (format === 'MA') {
-            // MA: mag=振幅, phase=位相（度）
-          } else if (format === 'RI') {
-            value = Math.sqrt(mag * mag + phase * phase)
-          }
-          row[`S${rowPort}${colPort}`] = value
+      for (const sParamKey of sParams) {
+        const { mag, phase } = dataArr.getMagPhaseByKey(sampleIdx, sParamKey)
+        let value = mag
+        if (format === 'MA') {
+          // MA: mag=振幅, phase=位相（度）
+        } else if (format === 'RI') {
+          value = Math.sqrt(mag * mag + phase * phase)
         }
+        row[sParamKey] = value
       }
       return row
     })
@@ -123,27 +121,32 @@ class TouchstoneDataArray {
   allNums: number[];
   nPorts: number;
   sampleLen: number;
-  sParams: string[];
-  constructor(allNums: number[], nPorts: number, sampleLen: number, sParams: string[]) {
+  constructor(allNums: number[], nPorts: number, sampleLen: number) {
     this.allNums = allNums;
     this.nPorts = nPorts;
     this.sampleLen = sampleLen;
-    this.sParams = sParams;
   }
   getFreq(sampleIdx: number): number {
     return this.allNums[sampleIdx * this.sampleLen]
   }
-  getSParamIndex(sampleIdx: number, i: number, j: number): number {
-    return sampleIdx * this.sampleLen + 1 + ((i - 1) * this.nPorts + (j - 1)) * 2
+  getSParamIndex(sampleIdx: number, rowPort: number, colPort: number): number {
+    // Sパラメータの値がallNums内でどこに格納されているかを計算
+    // sampleIdx: サンプル番号, rowPort: 行ポート番号, colPort: 列ポート番号（どちらも1始まり）
+    return sampleIdx * this.sampleLen + 1 + ((rowPort - 1) * this.nPorts + (colPort - 1)) * 2
   }
-  getMagPhase(sampleIdx: number, i: number, j: number): { mag: number, phase: number } {
-    const idx = this.getSParamIndex(sampleIdx, i, j)
-    return {
-      mag: this.allNums[idx],
-      phase: this.allNums[idx + 1],
-    }
+  getMagPhase(sampleIdx: number, rowPort: number, colPort: number): { mag: number, phase: number } {
+    // Sパラメータの実部/虚部または振幅/位相を取得（インデックス計算を直接展開）
+    const idx = sampleIdx * this.sampleLen + 1 + ((rowPort - 1) * this.nPorts + (colPort - 1)) * 2;
+    const mag = this.allNums[idx];
+    const phase = this.allNums[idx + 1];
+    return { mag, phase };
+  }
+  getMagPhaseByKey(sampleIdx: number, sParamKey: string): { mag: number, phase: number } {
+    // sParamKey: 'Sij' 形式
+    const rowPort = Number(sParamKey[1]);
+    const colPort = Number(sParamKey[2]);
+    return this.getMagPhase(sampleIdx, rowPort, colPort)
   }
 }
 
-// 既存の関数エクスポートも維持
 export const parseTouchstone = TouchstoneParser.parseTouchstone;
