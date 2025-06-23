@@ -128,10 +128,10 @@ class TouchstoneDocument {
     const { freqUnit, format, z0 } = this.header;
     const nSamples = Math.floor(this.dataArray.allNums.length / (1 + this.nPorts * this.nPorts * 2));
     return this.sParams.map((sParamKey) => {
-      const x: number[] = [];
-      const y: number[] = [];
-      for (let sampleIdx = 0; sampleIdx < nSamples; ++sampleIdx) {
-        x.push(TouchstoneParser.getFreqMultiplier(freqUnit) * this.dataArray.getFreq(sampleIdx));
+      const x = Array.from({ length: nSamples }, (_, sampleIdx) =>
+        TouchstoneParser.getFreqMultiplier(freqUnit) * this.dataArray.getFreq(sampleIdx)
+      );
+      const y = Array.from({ length: nSamples }, (_, sampleIdx) => {
         const { mag, phase } = this.dataArray.getMagPhaseByKey(sampleIdx, sParamKey);
         let value = mag;
         if (format === 'MA') {
@@ -139,8 +139,8 @@ class TouchstoneDocument {
         } else if (format === 'RI') {
           value = Math.sqrt(mag * mag + phase * phase);
         }
-        y.push(value);
-      }
+        return value;
+      });
       return {
         x,
         y,
