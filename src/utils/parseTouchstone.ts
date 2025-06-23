@@ -1,5 +1,15 @@
-import { getFreqMultiplier } from './freqUnit'
-import type { PlotData } from 'plotly.js'
+const freqUnitOptions = [
+  { label: 'GHz', value: 1e9 },
+  { label: 'MHz', value: 1e6 },
+  { label: 'kHz', value: 1e3 },
+  { label: 'Hz', value: 1 },
+] as const;
+function getFreqMultiplier(unit: string): number {
+  const opt = freqUnitOptions.find(u => u.label.toUpperCase() === unit.toUpperCase())
+  return opt ? opt.value : 1;
+}
+
+import type { PartialPlotData } from '../types/plot'
 
 export type ChartRow = { freq: number } & { [sParam: string]: number }
 
@@ -71,7 +81,7 @@ function buildSParams(nPorts: number): string[] {
   return sParams
 }
 
-export async function parseTouchstone(file: File): Promise<TouchstoneData & { traces: Partial<PlotData>[] }> {
+export async function parseTouchstone(file: File): Promise<PartialPlotData[]> {
   // FileReaderを使わず、readAsTextでファイル読み込み
   const text: string = await file.text();
   const filename = file.name
@@ -122,14 +132,15 @@ export async function parseTouchstone(file: File): Promise<TouchstoneData & { tr
   })
 
   // Plotly traces生成
-  const traces: Partial<PlotData>[] = sParams.map((s) => ({
+  const baseMeta = { space: 'frequency', format, freqUnit, nPorts, sParams, z0 };
+  const traces: PartialPlotData[] = sParams.map((s) => ({
     x: chartData.map(row => row.freq),
     y: chartData.map(row => row[s]),
     type: 'scatter',
     mode: 'lines',
     name: s,
-    line: { color: '#8884d8' }
+    meta: { ...baseMeta },
   }))
 
-  return { chartData, sParams, nPorts, freqUnit, format, z0, traces }
+  return traces
 }
