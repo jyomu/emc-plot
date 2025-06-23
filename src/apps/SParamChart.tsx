@@ -67,16 +67,6 @@ export function SParamChart() {
               </div>
               {showSpectrum && <PlotArea space="frequency" data={spectrumTraces} />}
             </div>
-            {/* 時系列空間 */}
-            <div>
-              <div style={{ fontWeight: 'bold', marginBottom: 4, display: 'flex', alignItems: 'center', gap: 8 }}>
-                <label>
-                  <input type="checkbox" checked={showTime} onChange={e => setShowTime(e.target.checked)} />
-                  時系列（IFFT）
-                </label>
-              </div>
-              {showTime && <PlotArea space="time" data={timeTraces} />}
-            </div>
             {/* ケプストラム空間 */}
             <div>
               <div style={{ fontWeight: 'bold', marginBottom: 4, display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -98,6 +88,16 @@ export function SParamChart() {
                 </label>
               </div>
               {showCepstrum && <PlotArea space="cepstrum" data={cepstrumTraces} />}
+            </div>
+            {/* 時系列空間 */}
+            <div>
+              <div style={{ fontWeight: 'bold', marginBottom: 4, display: 'flex', alignItems: 'center', gap: 8 }}>
+                <label>
+                  <input type="checkbox" checked={showTime} onChange={e => setShowTime(e.target.checked)} />
+                  時系列（IFFT）
+                </label>
+              </div>
+              {showTime && <PlotArea space="time" data={timeTraces} />}
             </div>
           </div>
         </>
