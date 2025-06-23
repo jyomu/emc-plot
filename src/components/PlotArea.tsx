@@ -1,63 +1,79 @@
 import Plot from 'react-plotly.js'
 import type { PlotData } from 'plotly.js'
+import { useState } from 'react'
+import { movingAverage } from '../utils/chartUtils'
 
-// 空間ごとの型
-type TimeDomainData = { t: number[]; y: number[] }
-type FrequencyDomainData = { f: number[]; Y: number[]; isLog?: boolean }
-type CepstrumDomainData = { q: number[]; C: number[] }
-
-// 複数系列一括描画用
-export type MultiPlotAreaProps = { plotData: Partial<PlotData>[]; xLabel?: string; yLabel?: string }
-
+// PlotAreaProps: dataはPartial<PlotData>[]型で統一
 type PlotAreaProps =
-  | { space: 'time'; data: TimeDomainData; xLabel?: string; yLabel?: string }
-  | { space: 'frequency'; data: FrequencyDomainData; xLabel?: string; yLabel?: string }
-  | { space: 'cepstrum'; data: CepstrumDomainData; xLabel?: string; yLabel?: string }
-  | MultiPlotAreaProps
+  | { space: 'time'; data: Partial<PlotData>[] }
+  | { space: 'frequency'; data: Partial<PlotData>[] }
+  | { space: 'cepstrum'; data: Partial<PlotData>[] }
 
 export function PlotArea(props: PlotAreaProps) {
-  let plotData: Partial<PlotData>[] = []
-  let defaultXLabel = ''
-  let defaultYLabel = ''
+  const [showMA, setShowMA] = useState(false)
+  const [maWindow, setMaWindow] = useState(50)
 
-  if ('plotData' in props) {
-    plotData = props.plotData
-    defaultXLabel = props.xLabel ?? ''
-    defaultYLabel = props.yLabel ?? ''
-  } else if (props.space === 'time') {
-    plotData = [{ x: props.data.t, y: props.data.y, type: 'scatter', mode: 'lines', name: 'Time' }]
-    defaultXLabel = 'Time [s]'
-    defaultYLabel = 'Amplitude'
-  } else if (props.space === 'frequency') {
-    plotData = [{
-      x: props.data.f,
-      y: props.data.Y,
-      type: 'scatter',
-      mode: 'lines',
-      name: props.data.isLog ? 'Log Spectrum' : 'Spectrum'
-    }]
-    defaultXLabel = 'Frequency [Hz]'
-    defaultYLabel = props.data.isLog ? 'log Amplitude' : 'Amplitude'
-  } else if (props.space === 'cepstrum') {
-    plotData = [{ x: props.data.q, y: props.data.C, type: 'scatter', mode: 'lines', name: 'Cepstrum' }]
-    defaultXLabel = 'Quefrency [s]'
-    defaultYLabel = 'Cepstrum'
+  let traces: Partial<PlotData>[] = props.data
+
+  const labelMap = {
+    time: { x: 'Time [s]', y: 'Amplitude' },
+    frequency: { x: 'Frequency [Hz]', y: 'Amplitude' },
+    cepstrum: { x: 'Quefrency [s]', y: 'Cepstrum' },
+  } as const
+
+  if (showMA && maWindow && traces.length > 0) {
+    const maTraces = traces
+      .filter((t): t is { x: number[]; y: number[]; name?: string } =>
+        Array.isArray(t.x) && t.x.every(v => typeof v === 'number') &&
+        Array.isArray(t.y) && t.y.every(v => typeof v === 'number')
+      )
+      .map(t => ({
+        x: t.x,
+        y: movingAverage(t.y, maWindow),
+        type: 'scatter' as const,
+        mode: 'lines' as const,
+        name: t.name ? `${t.name} (MA)` : 'Moving Average',
+        line: { dash: 'dash' as const, color: '#888' }
+      }))
+    traces = [...traces, ...maTraces]
   }
 
+  const maxWindow = traces.length > 0 && Array.isArray(traces[0].x) ? traces[0].x.length : 1
+
   return (
-    <Plot
-      data={plotData}
-      layout={{
-        autosize: true,
-        height: 400,
-        xaxis: { title: { text: props.xLabel ?? defaultXLabel } },
-        yaxis: { title: { text: props.yLabel ?? defaultYLabel } },
-        legend: { orientation: 'h' },
-        margin: { t: 30, l: 60, r: 30, b: 60 }
-      }}
-      useResizeHandler
-      style={{ width: '100%', height: '100%' }}
-      config={{ responsive: true }}
-    />
+    <div>
+      <div style={{ margin: '12px 0' }}>
+        <label>
+          <input type="checkbox" checked={showMA} onChange={e => setShowMA(e.target.checked)} /> 移動平均を表示
+        </label>
+        {showMA && (
+          <span style={{ marginLeft: 12 }}>
+            ウィンドウサイズ:
+            <input
+              type="number"
+              min={1}
+              max={maxWindow}
+              value={maWindow}
+              onChange={e => setMaWindow(Number(e.target.value))}
+              style={{ width: 60, marginLeft: 4 }}
+            />
+          </span>
+        )}
+      </div>
+      <Plot
+        data={traces}
+        layout={{
+          autosize: true,
+          height: 400,
+          xaxis: { title: { text: labelMap[props.space].x } },
+          yaxis: { title: { text: labelMap[props.space].y } },
+          legend: { orientation: 'h' },
+          margin: { t: 30, l: 60, r: 30, b: 60 }
+        }}
+        useResizeHandler
+        style={{ width: '100%', height: '100%' }}
+        config={{ responsive: true }}
+      />
+    </div>
   )
 }

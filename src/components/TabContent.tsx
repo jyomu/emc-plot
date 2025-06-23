@@ -1,25 +1,15 @@
 import { useState } from 'react'
 import { PlotArea } from './PlotArea'
-import { MovingAverageControl } from './MovingAverageControl'
 import { calcCepstrumStages } from '../utils/fftUtils'
-import { movingAverage } from '../utils/chartUtils'
 
 interface TabContentProps {
   signal: number[][]
   preProcess?: (mag: number) => number
-  showMA: boolean
-  setShowMA: (b: boolean) => void
-  maWindow: number
-  setMaWindow: (n: number) => void
 }
 
 export function TabContent({
   signal,
   preProcess: preProcessProp = (mag) => Math.log(mag + 1e-12),
-  showMA,
-  setShowMA,
-  maWindow,
-  setMaWindow
 }: TabContentProps) {
   // 前処理関数候補
   const preProcessOptions = [
@@ -32,22 +22,22 @@ export function TabContent({
   const preProcess = preProcessOptions.find(opt => opt.key === preProcessKey)?.fn || preProcessProp
 
   // 移動平均適用
-  const processedSignals = signal.map(sig => showMA ? movingAverage(sig, maWindow) : sig)
-  const stages = processedSignals.map(sig => calcCepstrumStages(sig, preProcess))
+  const stages = signal.map(sig => calcCepstrumStages(sig, preProcess))
 
   return (
     <>
       <div style={{ marginBottom: 24 }}>
         <h4 style={{ margin: '8px 0' }}>スペクトラム</h4>
-        {stages.map((stage, idx) => (
-          <PlotArea
-            key={`spectrum-${idx}`}
-            space="frequency"
-            data={{ f: stage.amplitude.map((_, i) => i), Y: stage.amplitude }}
-            xLabel="Frequency [Hz]"
-            yLabel="Amplitude"
-          />
-        ))}
+        <PlotArea
+          space="frequency"
+          data={stages.map((stage, idx) => ({
+            x: stage.amplitude.map((_, i) => i),
+            y: stage.amplitude,
+            type: 'scatter',
+            mode: 'lines',
+            name: `S${idx + 1}`
+          }))}
+        />
       </div>
       <div style={{ marginBottom: 24 }}>
         <h4 style={{ margin: '8px 0' }}>前処理後</h4>
@@ -59,35 +49,28 @@ export function TabContent({
             ))}
           </select>
         </div>
-        {stages.map((stage, idx) => (
-          <PlotArea
-            key={`preprocessed-${idx}`}
-            space="frequency"
-            data={{ f: stage.preProcessed.map((_, i) => i), Y: stage.preProcessed }}
-            xLabel="Frequency [Hz]"
-            yLabel="Pre-processed"
-          />
-        ))}
+        <PlotArea
+          space="frequency"
+          data={stages.map((stage, idx) => ({
+            x: stage.preProcessed.map((_, i) => i),
+            y: stage.preProcessed,
+            type: 'scatter',
+            mode: 'lines',
+            name: `S${idx + 1}`
+          }))}
+        />
       </div>
       <div style={{ marginBottom: 24 }}>
         <h4 style={{ margin: '8px 0' }}>ケプストラム</h4>
-        {stages.map((stage, idx) => (
-          <PlotArea
-            key={`cepstrum-${idx}`}
-            space="cepstrum"
-            data={{ q: stage.cepstrum.map((_, i) => i), C: stage.cepstrum }}
-            xLabel="Quefrency [s]"
-            yLabel="Cepstrum"
-          />
-        ))}
-      </div>
-      <div style={{ marginTop: 8 }}>
-        <MovingAverageControl
-          showMA={showMA}
-          setShowMA={setShowMA}
-          maWindow={maWindow}
-          setMaWindow={setMaWindow}
-          maxWindow={signal.length}
+        <PlotArea
+          space="cepstrum"
+          data={stages.map((stage, idx) => ({
+            x: stage.cepstrum.map((_, i) => i),
+            y: stage.cepstrum,
+            type: 'scatter',
+            mode: 'lines',
+            name: `S${idx + 1}`
+          }))}
         />
       </div>
     </>

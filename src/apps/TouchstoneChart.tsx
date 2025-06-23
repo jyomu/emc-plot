@@ -11,8 +11,6 @@ type TouchstoneChartProps = {
 export function TouchstoneChart({ traces }: TouchstoneChartProps) {
   const sParams = traces.map(t => typeof t.name === 'string' ? t.name : '').filter(Boolean)
   const [selected, setSelected] = useState<string[]>(sParams.slice(0, 1))
-  const [showMA, setShowMA] = useState(false)
-  const [maWindow, setMaWindow] = useState(50)
 
   // 選択された全Sパラメータの信号系列を配列で渡す
   const signals = useMemo(() => {
@@ -31,10 +29,6 @@ export function TouchstoneChart({ traces }: TouchstoneChartProps) {
       <TabContent
         signal={signals}
         preProcess={preProcess}
-        showMA={showMA}
-        setShowMA={setShowMA}
-        maWindow={maWindow}
-        setMaWindow={setMaWindow}
       />
     </>
   )
