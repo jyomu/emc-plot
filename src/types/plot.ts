@@ -1,6 +1,7 @@
 import type { PlotData } from 'plotly.js'
 
-// Plotly.jsのPartial<PlotData>型を拡張し、metaプロパティを許可
-export type PartialPlotData = Partial<PlotData> & {
+// yは必ずnumber[]型とする
+export type PartialPlotData = Omit<Partial<PlotData>, 'y'> & {
+  y: number[]
   meta?: { space: string }
 }

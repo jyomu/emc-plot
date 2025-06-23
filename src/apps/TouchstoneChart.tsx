@@ -18,21 +18,11 @@ export function TouchstoneChart({ traces }: TouchstoneChartProps) {
   }, [traces, selected])
 
   const spectrumTraces = useMemo(() =>
-    selectedTraces.reduce<PartialPlotData[]>((acc, t) => {
-      if (t.y && Array.isArray(t.y) && t.y.every((v): v is number => typeof v === 'number')) {
-        acc.push({ ...calcAmplitudeSpectrumTrace(t.y), name: t.name, type: 'scatter', mode: 'lines' })
-      }
-      return acc
-    }, [])
+    selectedTraces.map(t => calcAmplitudeSpectrumTrace(t))
   , [selectedTraces])
 
   const cepstrumTraces = useMemo(() =>
-    selectedTraces.reduce<PartialPlotData[]>((acc, t) => {
-      if (t.y && Array.isArray(t.y) && t.y.every((v): v is number => typeof v === 'number')) {
-        acc.push({ ...calcCepstrumTrace(t.y), name: t.name, type: 'scatter', mode: 'lines' })
-      }
-      return acc
-    }, [])
+    selectedTraces.map(t => calcCepstrumTrace(t))
   , [selectedTraces])
 
   return (

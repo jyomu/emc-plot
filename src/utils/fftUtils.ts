@@ -5,8 +5,7 @@ function nextPow2(n: number): number {
   return 2 ** Math.ceil(Math.log2(n))
 }
 
-// 振幅スペクトル
-export function calcAmplitudeSpectrumTrace(input: number[]): PartialPlotData {
+function fftMagnitude(input: number[]): number[] {
   const N = nextPow2(input.length)
   const fft = new FFT(N)
   const out = fft.createComplexArray()
@@ -22,32 +21,48 @@ export function calcAmplitudeSpectrumTrace(input: number[]): PartialPlotData {
     const im = out[2 * i + 1]
     spectrum.push(Math.sqrt(re * re + im * im))
   }
-  const x = Array.from({ length: N / 2 }, (_, i) => i)
+  return spectrum
+}
+
+// 振幅スペクトル
+export function calcAmplitudeSpectrumTrace(input: PartialPlotData): PartialPlotData {
+  const spectrum = fftMagnitude(input.y)
+  const x = Array.from({ length: spectrum.length }, (_, i) => i)
   return {
-    x, y: spectrum, name: 'Amplitude Spectrum', meta: { space: 'frequency' }, type: 'scatter', mode: 'lines'
+    x,
+    y: spectrum,
+    name: input.name ?? 'Amplitude Spectrum',
+    meta: { space: 'frequency' },
+    type: 'scatter',
+    mode: 'lines',
   }
 }
 
 // 対数スペクトル
-export function calcLogSpectrumTrace(input: number[]): PartialPlotData {
-  const amp = calcAmplitudeSpectrumTrace(input)
+export function calcLogSpectrumTrace(input: PartialPlotData): PartialPlotData {
+  const spectrum = fftMagnitude(input.y)
+  const logSpec = spectrum.map(mag => Math.log(mag + 1e-12))
+  const x = Array.from({ length: logSpec.length }, (_, i) => i)
   return {
-    ...amp,
-    y: Array.isArray(amp.y) ? amp.y.map(mag => typeof mag === 'number' ? Math.log(mag + 1e-12) : null) : amp.y,
-    name: 'Log Spectrum',
+    x,
+    y: logSpec,
+    name: input.name ?? 'Log Spectrum',
     meta: { space: 'frequency' },
+    type: 'scatter',
+    mode: 'lines',
   }
 }
 
 // ケプストラム
-export function calcCepstrumTrace(input: number[]): PartialPlotData {
+export function calcCepstrumTrace(input: PartialPlotData): PartialPlotData {
   const logSpec = calcLogSpectrumTrace(input)
-  const N = Array.isArray(logSpec.y) ? logSpec.y.length : 0
+  const y = logSpec.y
+  const N = y.length
   const fft = new FFT(N)
   const out = fft.createComplexArray()
   const data = fft.createComplexArray()
   for (let i = 0; i < N; i++) {
-    data[2 * i] = Array.isArray(logSpec.y) ? logSpec.y[i] : 0
+    data[2 * i] = y[i]
     data[2 * i + 1] = 0
   }
   fft.inverseTransform(out, data)
@@ -55,7 +70,7 @@ export function calcCepstrumTrace(input: number[]): PartialPlotData {
   return {
     x: Array.from({ length: N }, (_, i) => i),
     y: cepstrum,
-    name: 'Cepstrum',
+    name: input.name ?? 'Cepstrum',
     meta: { space: 'cepstrum' },
     type: 'scatter',
     mode: 'lines',
