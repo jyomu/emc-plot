@@ -83,13 +83,16 @@ class TouchstoneDataArray {
   allNums: number[];
   nPorts: number;
   sampleLen: number;
-  constructor(allNums: number[], nPorts: number) {
+  freqMultiplier: number;
+  constructor(allNums: number[], nPorts: number, freqMultiplier: number) {
     this.allNums = allNums;
     this.nPorts = nPorts;
     this.sampleLen = 1 + nPorts * nPorts * 2;
+    this.freqMultiplier = freqMultiplier;
   }
   getFreq(sampleIdx: number): number {
-    return this.allNums[sampleIdx * this.sampleLen];
+    // 物理単位変換済みの周波数値を返す
+    return this.freqMultiplier * this.allNums[sampleIdx * this.sampleLen];
   }
   getMagPhase(sampleIdx: number, rowPort: number, colPort: number): { mag: number, phase: number } {
     const idx = sampleIdx * this.sampleLen + 1 + ((rowPort - 1) * this.nPorts + (colPort - 1)) * 2;
@@ -121,16 +124,15 @@ class TouchstoneDocument {
     const allNums = dataLines.join(' ').split(/\s+/).map(Number).filter(x => !isNaN(x));
     this.nPorts = TouchstoneParser.resolveNPorts(filename, allNums);
     this.sParams = TouchstoneParser.buildSParams(this.nPorts);
-    this.dataArray = new TouchstoneDataArray(allNums, this.nPorts);
+    const freqMultiplier = TouchstoneParser.getFreqMultiplier(this.header.freqUnit);
+    this.dataArray = new TouchstoneDataArray(allNums, this.nPorts, freqMultiplier);
   }
 
   getPartialPlotData(): PartialPlotData[] {
-    const { freqUnit, format, z0 } = this.header;
+    const { format, freqUnit, z0 } = this.header;
     const nSamples = Math.floor(this.dataArray.allNums.length / (1 + this.nPorts * this.nPorts * 2));
     return this.sParams.map((sParamKey) => {
-      const x = Array.from({ length: nSamples }, (_, sampleIdx) =>
-        TouchstoneParser.getFreqMultiplier(freqUnit) * this.dataArray.getFreq(sampleIdx)
-      );
+      const x = Array.from({ length: nSamples }, (_, sampleIdx) => this.dataArray.getFreq(sampleIdx));
       const y = Array.from({ length: nSamples }, (_, sampleIdx) => {
         const { mag, phase } = this.dataArray.getMagPhaseByKey(sampleIdx, sParamKey);
         let value = mag;
