@@ -20,15 +20,11 @@ export function TouchstoneChart({ traces }: TouchstoneChartProps) {
       .filter(arr => arr.length > 0)
   }, [traces, selected])
 
-  // 前処理関数（例: log）
-  const preProcess = (mag: number) => Math.log(mag + 1e-12)
-
   return (
     <>
       <SParamSelector traces={traces} selected={selected} onChange={(s: string) => setSelected(prev => prev.includes(s) ? prev.filter(x => x !== s) : [...prev, s])} />
       <TabContent
         signal={signals}
-        preProcess={preProcess}
       />
     </>
   )
