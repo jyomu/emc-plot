@@ -1,7 +1,5 @@
 import type { PartialPlotData } from '../types/plot'
 
-export type ChartRow = { freq: number } & { [sParam: string]: number }
-
 export class TouchstoneParser {
   static parseHeader(lines: string[]): { freqUnit: string, format: string, z0: number } {
     for (const line of lines) {
@@ -75,45 +73,9 @@ export class TouchstoneParser {
 
   static async parseTouchstone(file: File): Promise<PartialPlotData[]> {
     const text: string = await file.text();
-    const filename = file.name
-    const lines = text.split(/\r?\n/)
-    const { freqUnit, format: rawFormat, z0 } = TouchstoneParser.parseHeader(lines)
-    if (rawFormat !== 'DB' && rawFormat !== 'MA' && rawFormat !== 'RI') {
-      throw new Error(`Unexpected rawFormat value: ${rawFormat}. Expected 'DB', 'MA', or 'RI'.`)
-    }
-    const format = rawFormat
-    const dataLines = TouchstoneParser.extractDataLines(lines)
-    const allNums = dataLines.join(' ').split(/\s+/).map(Number).filter(x => !isNaN(x))
-    const nPorts = TouchstoneParser.resolveNPorts(filename, allNums)
-    const sampleLen = 1 + nPorts * nPorts * 2
-    const nSamples = Math.floor(allNums.length / sampleLen)
-    const sParams = TouchstoneParser.buildSParams(nPorts)
-    const dataArr = new TouchstoneDataArray(allNums, nPorts, sampleLen)
-    const chartData: ChartRow[] = Array.from({ length: nSamples }, (_, sampleIdx) => {
-      const freq = TouchstoneParser.getFreqMultiplier(freqUnit) * dataArr.getFreq(sampleIdx)
-      const row: ChartRow = { freq }
-      for (const sParamKey of sParams) {
-        const { mag, phase } = dataArr.getMagPhaseByKey(sampleIdx, sParamKey)
-        let value = mag
-        if (format === 'MA') {
-          // MA: mag=振幅, phase=位相（度）
-        } else if (format === 'RI') {
-          value = Math.sqrt(mag * mag + phase * phase)
-        }
-        row[sParamKey] = value
-      }
-      return row
-    })
-    const baseMeta = { space: 'frequency', format, freqUnit, nPorts, sParams, z0 };
-    const traces: PartialPlotData[] = sParams.map((s) => ({
-      x: chartData.map(row => row.freq),
-      y: chartData.map(row => row[s]),
-      type: 'scatter',
-      mode: 'lines',
-      name: s,
-      meta: { ...baseMeta },
-    }))
-    return traces
+    const filename = file.name;
+    const doc = new TouchstoneDocument(filename, text);
+    return doc.getPartialPlotData();
   }
 }
 
@@ -121,31 +83,73 @@ class TouchstoneDataArray {
   allNums: number[];
   nPorts: number;
   sampleLen: number;
-  constructor(allNums: number[], nPorts: number, sampleLen: number) {
+  constructor(allNums: number[], nPorts: number) {
     this.allNums = allNums;
     this.nPorts = nPorts;
-    this.sampleLen = sampleLen;
+    this.sampleLen = 1 + nPorts * nPorts * 2;
   }
   getFreq(sampleIdx: number): number {
-    return this.allNums[sampleIdx * this.sampleLen]
-  }
-  getSParamIndex(sampleIdx: number, rowPort: number, colPort: number): number {
-    // Sパラメータの値がallNums内でどこに格納されているかを計算
-    // sampleIdx: サンプル番号, rowPort: 行ポート番号, colPort: 列ポート番号（どちらも1始まり）
-    return sampleIdx * this.sampleLen + 1 + ((rowPort - 1) * this.nPorts + (colPort - 1)) * 2
+    return this.allNums[sampleIdx * this.sampleLen];
   }
   getMagPhase(sampleIdx: number, rowPort: number, colPort: number): { mag: number, phase: number } {
-    // Sパラメータの実部/虚部または振幅/位相を取得（インデックス計算を直接展開）
     const idx = sampleIdx * this.sampleLen + 1 + ((rowPort - 1) * this.nPorts + (colPort - 1)) * 2;
     const mag = this.allNums[idx];
     const phase = this.allNums[idx + 1];
     return { mag, phase };
   }
   getMagPhaseByKey(sampleIdx: number, sParamKey: string): { mag: number, phase: number } {
-    // sParamKey: 'Sij' 形式
     const rowPort = Number(sParamKey[1]);
     const colPort = Number(sParamKey[2]);
-    return this.getMagPhase(sampleIdx, rowPort, colPort)
+    return this.getMagPhase(sampleIdx, rowPort, colPort);
+  }
+}
+
+class TouchstoneDocument {
+  filename: string;
+  text: string;
+  header: { freqUnit: string, format: string, z0: number };
+  nPorts: number;
+  sParams: string[];
+  dataArray: TouchstoneDataArray;
+
+  constructor(filename: string, text: string) {
+    this.filename = filename;
+    this.text = text;
+    const lines = text.split(/\r?\n/);
+    this.header = TouchstoneParser.parseHeader(lines);
+    const dataLines = TouchstoneParser.extractDataLines(lines);
+    const allNums = dataLines.join(' ').split(/\s+/).map(Number).filter(x => !isNaN(x));
+    this.nPorts = TouchstoneParser.resolveNPorts(filename, allNums);
+    this.sParams = TouchstoneParser.buildSParams(this.nPorts);
+    this.dataArray = new TouchstoneDataArray(allNums, this.nPorts);
+  }
+
+  getPartialPlotData(): PartialPlotData[] {
+    const { freqUnit, format, z0 } = this.header;
+    const nSamples = Math.floor(this.dataArray.allNums.length / (1 + this.nPorts * this.nPorts * 2));
+    return this.sParams.map((sParamKey) => {
+      const x: number[] = [];
+      const y: number[] = [];
+      for (let sampleIdx = 0; sampleIdx < nSamples; ++sampleIdx) {
+        x.push(TouchstoneParser.getFreqMultiplier(freqUnit) * this.dataArray.getFreq(sampleIdx));
+        const { mag, phase } = this.dataArray.getMagPhaseByKey(sampleIdx, sParamKey);
+        let value = mag;
+        if (format === 'MA') {
+          // MA: mag=振幅, phase=位相（度）
+        } else if (format === 'RI') {
+          value = Math.sqrt(mag * mag + phase * phase);
+        }
+        y.push(value);
+      }
+      return {
+        x,
+        y,
+        type: 'scatter',
+        mode: 'lines',
+        name: sParamKey,
+        meta: { space: 'frequency', format, freqUnit, nPorts: this.nPorts, sParams: this.sParams, z0 },
+      };
+    });
   }
 }
 
