@@ -50,13 +50,19 @@ export function calcIFFTTrace(input: PartialPlotData): PartialPlotData {
   }
 }
 
-// スペクトル（実数配列）からケプストラムを計算しPartialPlotDataで返す
-export function calcCepstrumFromSpectrumTrace(spectrum: PartialPlotData): PartialPlotData {
-  // logスペクトル
-  const logSpec = spectrum.y.map((v: number) => Math.log(Math.abs(v) + 1e-12))
-  // logスペクトルのDFT
+// logType: 'log'|'log10'|'log2'|'none' で切り替え
+export function calcCepstrumFromSpectrumTrace(spectrum: PartialPlotData, logType: 'log'|'log10'|'log2'|'none' = 'log'): PartialPlotData {
+  let logSpec: number[]
+  if (logType === 'log10') {
+    logSpec = spectrum.y.map((v: number) => Math.log10(Math.abs(v) + 1e-12))
+  } else if (logType === 'log2') {
+    logSpec = spectrum.y.map((v: number) => Math.log2(Math.abs(v) + 1e-12))
+  } else if (logType === 'none') {
+    logSpec = spectrum.y.map((v: number) => Math.abs(v))
+  } else {
+    logSpec = spectrum.y.map((v: number) => Math.log(Math.abs(v) + 1e-12))
+  }
   const { re: cre, im: cim } = dft(logSpec)
-  // IDFTでケプストラム（実部のみ）
   const cepstrum = idft(cre, cim)
   return {
     x: Array.from({ length: cepstrum.length }, (_, i) => i),
