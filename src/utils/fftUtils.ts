@@ -68,7 +68,7 @@ export function calcCepstrumFromSpectrumTrace(spectrum: PartialPlotData, logType
     x: Array.from({ length: cepstrum.length }, (_, i) => i),
     y: cepstrum,
     name: spectrum.name ? spectrum.name + ' Cepstrum' : 'Cepstrum',
-    meta: { ...spectrum.meta, space: 'cepstrum' },
+    meta: { ...(spectrum.meta ?? {}), space: 'cepstrum' },
     type: 'scatter',
     mode: 'lines',
   }
