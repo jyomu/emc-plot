@@ -3,35 +3,75 @@ import type { PartialPlotData } from '../types/plot'
 import { SParamSelector } from '../components/SParamSelector'
 import { PlotArea } from '../components/PlotArea'
 import { parseTouchstone } from '../utils/parseTouchstone'
-import { calcIDFTTrace, calcCepstrumFromSpectrumTrace } from '../utils/fftUtils'
+import { dft, idft } from '../utils/fftUtils'
 import { movingAverage } from '../utils/chartUtils'
+
+// 前処理関数
+function applyPreprocess(y: number[], opts: { logType?: 'log'|'log10'|'log2'|'none', maEnabled?: boolean, maWindow?: number }) {
+  let out = y.slice()
+  if (opts.maEnabled && opts.maWindow && opts.maWindow > 1) {
+    out = movingAverage(out, opts.maWindow)
+  }
+  if (opts.logType && opts.logType !== 'none') {
+    switch (opts.logType) {
+      case 'log10': out = out.map(v => Math.log10(Math.abs(v) + 1e-12)); break
+      case 'log2': out = out.map(v => Math.log2(Math.abs(v) + 1e-12)); break
+      default: out = out.map(v => Math.log(Math.abs(v) + 1e-12))
+    }
+  }
+  return out
+}
 
 export function SParamChart() {
   const [traces, setTraces] = useState<PartialPlotData[] | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [selected, setSelected] = useState<string[]>([])
 
-  // 各空間の表示state（チェックボックスで制御）
-  const [showSpectrum, setShowSpectrum] = useState(true)
-  const [showTime, setShowTime] = useState(true)
-  const [showCepstrum, setShowCepstrum] = useState(true)
-
-  // 移動平均設定
-  const [maEnabled, setMaEnabled] = useState(false)
-  const [maWindow, setMaWindow] = useState(5)
-  // ケプストラムlog関数設定
-  const [logType, setLogType] = useState<'log'|'log10'|'log2'|'none'>('log')
+  // DFT前処理
+  const [dftLogType, setDftLogType] = useState<'log'|'log10'|'log2'|'none'>('none')
+  const [dftMaEnabled, setDftMaEnabled] = useState(false)
+  const [dftMaWindow, setDftMaWindow] = useState(50)
+  // IDFT前処理
+  const [idftMaEnabled, setIdftMaEnabled] = useState(false)
+  const [idftMaWindow, setIdftMaWindow] = useState(50)
 
   // 選択されたtrace（周波数領域データ）
   const spectrumTracesRaw = traces?.filter(t => typeof t.name === 'string' && selected.includes(t.name)) ?? []
-  // 移動平均適用
-  const spectrumTraces = maEnabled && maWindow > 1
-    ? spectrumTracesRaw.map(t => ({ ...t, y: movingAverage(t.y, maWindow) }))
-    : spectrumTracesRaw
-  // IDFTで時系列化
-  const timeTraces = spectrumTraces.map(t => calcIDFTTrace(t))
-  // ケプストラムはスペクトラム（周波数領域データ）から直接計算
-  const cepstrumTraces = spectrumTraces.map(t => calcCepstrumFromSpectrumTrace(t, logType))
+
+  // Sパラメータ（生データ）
+  const sparamTraces = spectrumTracesRaw.map(t => ({
+    ...t,
+    meta: { ...(t.meta ?? {}), space: 'frequency' },
+    name: t.name + ' (Sパラメータ)'
+  }))
+
+  // DFT
+  const dftTraces = spectrumTracesRaw.map(t => {
+    const yPre = applyPreprocess(t.y, { logType: dftLogType, maEnabled: dftMaEnabled, maWindow: dftMaWindow })
+    const { re, im } = dft(yPre)
+    // 複素スペクトルの絶対値を表示
+    const yAbs = re.map((r, i) => Math.sqrt(r*r + im[i]*im[i]))
+    return {
+      ...t,
+      y: yAbs,
+      meta: { ...(t.meta ?? {}), space: 'dft' },
+      name: t.name + ' (DFT)'
+    }
+  })
+
+  // IDFT
+  const idftTraces = spectrumTracesRaw.map(t => {
+    const yPre = applyPreprocess(t.y, { maEnabled: idftMaEnabled, maWindow: idftMaWindow })
+    const re = yPre.slice()
+    const im = new Array(yPre.length).fill(0)
+    const yTime = idft(re, im)
+    return {
+      ...t,
+      y: yTime,
+      meta: { ...(t.meta ?? {}), space: 'idft' },
+      name: t.name + ' (IDFT)'
+    }
+  })
 
   return (
     <>
@@ -51,34 +91,28 @@ export function SParamChart() {
         <>
           <SParamSelector traces={traces} selected={selected} onChange={(s: string) => setSelected(prev => prev.includes(s) ? prev.filter(x => x !== s) : [...prev, s])} />
           <div style={{ display: 'flex', flexDirection: 'column', gap: 32, margin: '24px 0' }}>
-            {/* スペクトラム空間 */}
+            {/* Sパラメータ空間 */}
             <div>
               <div style={{ fontWeight: 'bold', marginBottom: 4, display: 'flex', alignItems: 'center', gap: 8 }}>
-                <label>
-                  <input type="checkbox" checked={showSpectrum} onChange={e => setShowSpectrum(e.target.checked)} />
-                  スペクトラム
-                </label>
-                <label style={{ marginLeft: 16 }}>
-                  <input type="checkbox" checked={maEnabled} onChange={e => setMaEnabled(e.target.checked)} /> 移動平均
-                </label>
-                {maEnabled && (
-                  <input type="number" min={2} max={100} value={maWindow} onChange={e => setMaWindow(Number(e.target.value))} style={{ width: 60, marginLeft: 8 }} />
-                )}
+                Sパラメータ
               </div>
-              {showSpectrum && <PlotArea space="frequency" data={spectrumTraces} />}
+              <PlotArea space="frequency" data={sparamTraces} />
             </div>
-            {/* ケプストラム空間 */}
+            {/* DFT空間 */}
             <div>
               <div style={{ fontWeight: 'bold', marginBottom: 4, display: 'flex', alignItems: 'center', gap: 8 }}>
-                <label>
-                  <input type="checkbox" checked={showCepstrum} onChange={e => setShowCepstrum(e.target.checked)} />
-                  ケプストラム
+                DFT
+                <label style={{ marginLeft: 16 }}>
+                  <input type="checkbox" checked={dftMaEnabled} onChange={e => setDftMaEnabled(e.target.checked)} /> 移動平均
                 </label>
+                {dftMaEnabled && (
+                  <input type="number" min={2} max={100} value={dftMaWindow} onChange={e => setDftMaWindow(Number(e.target.value))} style={{ width: 60, marginLeft: 8 }} />
+                )}
                 <label style={{ marginLeft: 16 }}>
                   log関数:
-                  <select value={logType} onChange={e => {
+                  <select value={dftLogType} onChange={e => {
                     const v = e.target.value
-                    if (v === 'log' || v === 'log10' || v === 'log2' || v === 'none') setLogType(v)
+                    if (v === 'log' || v === 'log10' || v === 'log2' || v === 'none') setDftLogType(v)
                   }} style={{ marginLeft: 4 }}>
                     <option value="log">log</option>
                     <option value="log10">log10</option>
@@ -87,17 +121,20 @@ export function SParamChart() {
                   </select>
                 </label>
               </div>
-              {showCepstrum && <PlotArea space="cepstrum" data={cepstrumTraces} />}
+              <PlotArea space="none" data={dftTraces} />
             </div>
-            {/* 時系列空間 */}
+            {/* IDFT空間 */}
             <div>
               <div style={{ fontWeight: 'bold', marginBottom: 4, display: 'flex', alignItems: 'center', gap: 8 }}>
-                <label>
-                  <input type="checkbox" checked={showTime} onChange={e => setShowTime(e.target.checked)} />
-                  時系列（IDFT）
+                IDFT
+                <label style={{ marginLeft: 16 }}>
+                  <input type="checkbox" checked={idftMaEnabled} onChange={e => setIdftMaEnabled(e.target.checked)} /> 移動平均
                 </label>
+                {idftMaEnabled && (
+                  <input type="number" min={2} max={100} value={idftMaWindow} onChange={e => setIdftMaWindow(Number(e.target.value))} style={{ width: 60, marginLeft: 8 }} />
+                )}
               </div>
-              {showTime && <PlotArea space="time" data={timeTraces} />}
+              <PlotArea space="none" data={idftTraces} />
             </div>
           </div>
         </>
