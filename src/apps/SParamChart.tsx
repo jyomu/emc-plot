@@ -121,7 +121,7 @@ export function SParamChart() {
                   </select>
                 </label>
               </div>
-              <PlotArea space="frequency" data={dftTraces} />
+              <PlotArea space="none" data={dftTraces} />
             </div>
             {/* IDFT空間 */}
             <div>
@@ -134,7 +134,7 @@ export function SParamChart() {
                   <input type="number" min={2} max={100} value={idftMaWindow} onChange={e => setIdftMaWindow(Number(e.target.value))} style={{ width: 60, marginLeft: 8 }} />
                 )}
               </div>
-              <PlotArea space="time" data={idftTraces} />
+              <PlotArea space="none" data={idftTraces} />
             </div>
           </div>
         </>

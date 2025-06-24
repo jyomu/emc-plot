@@ -6,8 +6,7 @@ import type { Layout } from 'plotly.js'
 import { MovingAverageControl } from '../components/MovingAverageControl'
 
 // 空間ごとのレイアウトを返す関数
-function getLayoutForSpace(space: 'time' | 'frequency' | 'cepstrum'): Partial<Layout> {
-  // 共通部分
+function getLayoutForSpace(space: 'time' | 'frequency' | 'cepstrum' | 'none'): Partial<Layout> {
   const base = {
     autosize: true,
     height: 400,
@@ -33,6 +32,12 @@ function getLayoutForSpace(space: 'time' | 'frequency' | 'cepstrum'): Partial<La
         xaxis: { title: { text: 'Quefrency [s]' }, tickformat: '~s', ticksuffix: 's' },
         yaxis: { title: { text: 'Cepstrum' }, tickformat: '~s' },
       }
+    case 'none':
+      return {
+        ...base,
+        xaxis: { title: { text: 'Index' } },
+        yaxis: { title: { text: 'Value' } },
+      }
   }
 }
 
@@ -40,6 +45,7 @@ type PlotAreaProps =
   | { space: 'time'; data: PartialPlotData[] }
   | { space: 'frequency'; data: PartialPlotData[] }
   | { space: 'cepstrum'; data: PartialPlotData[] }
+  | { space: 'none'; data: PartialPlotData[] }
 
 export function PlotArea(props: PlotAreaProps) {
   const [showMA, setShowMA] = useState(false)
