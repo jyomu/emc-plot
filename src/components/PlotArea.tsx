@@ -2,31 +2,51 @@ import Plot from 'react-plotly.js'
 import { useState } from 'react'
 import { movingAverage } from '../utils/chartUtils'
 import type { PartialPlotData } from '../types/plot'
-import type { Dash } from 'plotly.js'
+import type { Dash, Layout } from 'plotly.js'
 import { MovingAverageControl } from '../components/MovingAverageControl'
 
-// PlotAreaProps: dataはPartialPlotData[]型で統一
-// spaceごとに属性を切り替える
-const spaceConfig = {
-  time: {
-    xLabel: 'Time [s]',
-    yLabel: 'Amplitude',
-    tickSuffix: 's',
-    hovertemplate: '%{x}<br>%{y:.3f} <extra></extra>',
-  },
-  frequency: {
-    xLabel: 'Frequency [Hz]',
-    yLabel: 'Amplitude',
-    tickSuffix: 'Hz',
-    hovertemplate: '%{x:.2s}Hz<br>%{y:.3f} <extra></extra>',
-  },
-  cepstrum: {
-    xLabel: 'Quefrency [s]',
-    yLabel: 'Cepstrum',
-    tickSuffix: 's',
-    hovertemplate: '%{x}<br>%{y:.3f} <extra></extra>',
-  },
-} as const
+// 空間ごとのレイアウトを返す関数
+function getLayoutForSpace(space: 'time' | 'frequency' | 'cepstrum'): Partial<Layout> {
+  // 共通部分
+  const base = {
+    autosize: true,
+    height: 400,
+    legend: { orientation: 'h' },
+    margin: { t: 30, l: 60, r: 30, b: 60 }
+  } as const
+  switch (space) {
+    case 'time':
+      return {
+        ...base,
+        xaxis: { title: { text: 'Time [s]' }, tickformat: '~s', ticksuffix: 's' },
+        yaxis: { title: { text: 'Amplitude' }, tickformat: '~s' },
+      }
+    case 'frequency':
+      return {
+        ...base,
+        xaxis: { title: { text: 'Frequency [Hz]' }, tickformat: '~s', ticksuffix: 'Hz' },
+        yaxis: { title: { text: 'Amplitude' }, tickformat: '~s' },
+      }
+    case 'cepstrum':
+      return {
+        ...base,
+        xaxis: { title: { text: 'Quefrency [s]' }, tickformat: '~s', ticksuffix: 's' },
+        yaxis: { title: { text: 'Cepstrum' }, tickformat: '~s' },
+      }
+  }
+}
+
+// 空間ごとのhovertemplate
+function getHoverTemplate(space: 'time' | 'frequency' | 'cepstrum'): string {
+  switch (space) {
+    case 'time':
+      return '%{x}<br>%{y:.3f} <extra></extra>'
+    case 'frequency':
+      return '%{x:.2s}Hz<br>%{y:.3f} <extra></extra>'
+    case 'cepstrum':
+      return '%{x}<br>%{y:.3f} <extra></extra>'
+  }
+}
 
 type PlotAreaProps =
   | { space: 'time'; data: PartialPlotData[] }
@@ -38,7 +58,7 @@ export function PlotArea(props: PlotAreaProps) {
   const [maWindow, setMaWindow] = useState(50)
 
   let traces: PartialPlotData[] = props.data
-  const config = spaceConfig[props.space]
+  const hovertemplate = getHoverTemplate(props.space)
 
   if (showMA && maWindow && traces.length > 0) {
     const maTraces = traces
@@ -52,8 +72,8 @@ export function PlotArea(props: PlotAreaProps) {
         type: 'scatter' as const,
         mode: 'lines' as const,
         name: t.name ? `${t.name} (MA)` : 'Moving Average',
-        line: { dash: 'dash' as const }, // MAのみ点線
-        hovertemplate: config.hovertemplate,
+        line: { dash: 'dash' as const },
+        hovertemplate,
       }))
     traces = [...traces, ...maTraces]
   }
@@ -66,7 +86,7 @@ export function PlotArea(props: PlotAreaProps) {
       ...trace,
       type: 'scatter' as const,
       line: { dash },
-      hovertemplate: config.hovertemplate,
+      hovertemplate,
     }
   })
 
@@ -80,21 +100,7 @@ export function PlotArea(props: PlotAreaProps) {
       />
       <Plot
         data={plotData}
-        layout={{
-          autosize: true,
-          height: 400,
-          xaxis: {
-            title: { text: config.xLabel },
-            tickformat: '~s',
-            ticksuffix: config.tickSuffix,
-          },
-          yaxis: {
-            title: { text: config.yLabel },
-            tickformat: '~s',
-          },
-          legend: { orientation: 'h' },
-          margin: { t: 30, l: 60, r: 30, b: 60 }
-        }}
+        layout={getLayoutForSpace(props.space)}
         useResizeHandler
         style={{ width: '100%', height: '100%' }}
         config={{ responsive: true }}
