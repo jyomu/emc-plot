@@ -87,6 +87,22 @@ export function SParamChart() {
           setError('パースエラー: ' + (err instanceof Error ? err.message : String(err)))
         }
       }} />
+      <div style={{ marginBottom: 8 }}>
+        <button onClick={async () => {
+          try {
+            const res = await fetch('/SMA(NARROW11(CP-max).s3p')
+            if (!res.ok) throw new Error('サンプルファイルの取得に失敗しました')
+            const blob = await res.blob()
+            const file = new File([blob], 'SMA(NARROW11(CP-max).s3p')
+            const traces = await parseTouchstone(file)
+            setTraces(traces)
+            setSelected(traces.map(t => typeof t.name === 'string' && t.name ? t.name : '').filter(Boolean).slice(0, 1))
+            setError(null)
+          } catch (err) {
+            setError('サンプル読込エラー: ' + (err instanceof Error ? err.message : String(err)))
+          }
+        }}>サンプル（SMA(NARROW11(CP-max).s3p）を読み込む</button>
+      </div>
       {traces && (
         <>
           <SParamSelector traces={traces} selected={selected} onChange={(s: string) => setSelected(prev => prev.includes(s) ? prev.filter(x => x !== s) : [...prev, s])} />
