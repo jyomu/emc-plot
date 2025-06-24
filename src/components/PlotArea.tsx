@@ -7,8 +7,11 @@ import { MovingAverageControl } from '../components/MovingAverageControl'
 
 // 空間ごとのレイアウトを返す関数
 function getLayoutForSpace(space: 'time' | 'frequency' | 'cepstrum' | 'none'): Partial<Layout> {
-  const base = {
+  const base: Partial<Layout> = {
     autosize: true,
+    paper_bgcolor: 'rgba(0,0,0,0)',
+    plot_bgcolor: 'rgba(0,0,0,0)',
+    font: { color: '#ffffff' },
     height: 400,
     legend: { orientation: 'h' },
     margin: { t: 30, l: 60, r: 30, b: 60 }
@@ -79,7 +82,11 @@ export function PlotArea(props: PlotAreaProps) {
         layout={getLayoutForSpace(props.space)}
         useResizeHandler
         style={{ width: '100%', height: '100%' }}
-        config={{ responsive: true }}
+        config={{ 
+          responsive: true,
+          editable: true,
+          
+         }}
       />
     </div>
   )
