@@ -48,21 +48,16 @@ export function PlotArea(props: PlotAreaProps) {
   const plotData: PartialPlotData[] = props.data.slice()
 
   if (showMA && maWindow && plotData.length > 0) {
-    plotData
-      .filter((t): t is { x: number[]; y: number[]; name?: string } =>
-        Array.isArray(t.x) && t.x.every(v => typeof v === 'number') &&
-        Array.isArray(t.y) && t.y.every(v => typeof v === 'number')
-      )
-      .forEach(t => {
-        plotData.push({
-          x: t.x,
-          y: movingAverage(t.y, maWindow),
-          type: 'scatter' as const,
-          mode: 'lines' as const,
-          name: t.name ? `${t.name} (MA)` : 'Moving Average',
-          line: { dash: 'dash' as const },
-        })
-      })
+    const maTraces = plotData
+      .map(t => ({
+      x: t.x,
+      y: movingAverage(t.y, maWindow),
+      type: 'scatter' as const,
+      mode: 'lines' as const,
+      name: t.name ? `${t.name} (MA)` : 'Moving Average',
+      line: { dash: 'dash' as const },
+      }))
+    plotData.push(...maTraces)
   }
 
   return (
