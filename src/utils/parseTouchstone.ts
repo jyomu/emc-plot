@@ -101,6 +101,11 @@ class TouchstoneDataArray {
     return { mag, phase };
   }
   getMagPhaseByKey(sampleIdx: number, sParamKey: string): { mag: number, phase: number } {
+    // ポート数が一桁であることを保証
+    if (this.nPorts >= 10) {
+      throw new Error('ポート数が一桁（1～9）であることのみサポートしています');
+    }
+    // sParamKey: "S12" のような形式を想定
     const rowPort = Number(sParamKey[1]);
     const colPort = Number(sParamKey[2]);
     return this.getMagPhase(sampleIdx, rowPort, colPort);
