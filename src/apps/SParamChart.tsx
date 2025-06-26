@@ -9,6 +9,14 @@ import { SParamSelector } from '../components/SParamSelector'
 import { FileLoader } from '../components/FileLoader'
 import { PlotSection } from '../components/PlotSection'
 
+function getSelectedSParamTraces(traces: PartialPlotData[], selected: string[]): PartialPlotData[] {
+  return traces.filter(t => typeof t.name === 'string' && selected.includes(t.name))
+    .map(t => ({
+      ...t,
+      name: t.name + ' (Sパラメータ)'
+    }))
+}
+
 export function SParamChart() {
   const [traces, setTraces] = useState<PartialPlotData[] | null>(null)
   const [selected, setSelected] = useState<string[]>([])
@@ -29,13 +37,7 @@ export function SParamChart() {
             <PlotSection
               mode="raw"
               title="Sパラメータ"
-              data={(() => {
-                const spectrumTracesRaw = traces.filter(t => typeof t.name === 'string' && selected.includes(t.name))
-                return spectrumTracesRaw.map(t => ({
-                  ...t,
-                  name: t.name + ' (Sパラメータ)'
-                }))
-              })()}
+              data={getSelectedSParamTraces(traces, selected)}
               space="frequency"
             />
             {(['dft', 'idft'] as const).map(processType => (
