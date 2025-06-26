@@ -24,7 +24,6 @@ function applyPreprocess(y: number[], opts: { logType?: 'log'|'log10'|'log2'|'no
 
 export function SParamChart() {
   const [traces, setTraces] = useState<PartialPlotData[] | null>(null)
-  const [error, setError] = useState<string | null>(null)
   const [selected, setSelected] = useState<string[]>([])
 
   // DFT前処理
@@ -81,7 +80,6 @@ export function SParamChart() {
           setTraces(traces)
           setSelected(selectedNames)
         }}
-        onError={msg => setError(msg)}
       />
       {traces && (
         <>
@@ -133,7 +131,6 @@ export function SParamChart() {
           </div>
         </>
       )}
-      {error && <div className="text-red-500 mt-2">{error}</div>}
     </div>
   )
 }
