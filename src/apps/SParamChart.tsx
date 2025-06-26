@@ -2,9 +2,9 @@ import { useState } from 'react'
 import type { PartialPlotData } from '../types/plot'
 import { SParamSelector } from '../components/SParamSelector'
 import { PlotArea } from '../components/PlotArea'
-import { parseTouchstone } from '../utils/parseTouchstone'
 import { dft, idft } from '../utils/fftUtils'
 import { movingAverage } from '../utils/chartUtils'
+import { FileLoader } from '../components/FileLoader'
 
 // 前処理関数
 function applyPreprocess(y: number[], opts: { logType?: 'log'|'log10'|'log2'|'none', maEnabled?: boolean, maWindow?: number }) {
@@ -76,36 +76,13 @@ export function SParamChart() {
   return (
     <div className="w-full mx-auto px-4 text-center">
       <h1>Touchstone Sパラメータプロッタ (nポート対応)</h1>
-      <div className="mb-2 w-full flex justify-center items-center">
-        <input type="file" accept=".snp,.s2p,.s3p,.s4p" onChange={async (e) => {
-          const file = e.target.files?.[0]
-          if (!file) return
-          try {
-            const traces = await parseTouchstone(file)
-            setTraces(traces)
-            setSelected(traces.map(t => typeof t.name === 'string' && t.name ? t.name : '').filter(Boolean).slice(0, 1))
-            setError(null)
-          } catch (err) {
-            setError('パースエラー: ' + (err instanceof Error ? err.message : String(err)))
-          }
-        }} className="mb-2" />
-      </div>
-      <div className="mb-2">
-        <button onClick={async () => {
-          try {
-            const res = await fetch('/SMA(NARROW11(CP-max).s3p')
-            if (!res.ok) throw new Error('サンプルファイルの取得に失敗しました')
-            const blob = await res.blob()
-            const file = new File([blob], 'SMA(NARROW11(CP-max).s3p')
-            const traces = await parseTouchstone(file)
-            setTraces(traces)
-            setSelected(traces.map(t => typeof t.name === 'string' && t.name ? t.name : '').filter(Boolean).slice(0, 1))
-            setError(null)
-          } catch (err) {
-            setError('サンプル読込エラー: ' + (err instanceof Error ? err.message : String(err)))
-          }
-        }}>サンプル（SMA(NARROW11(CP-max).s3p）を読み込む</button>
-      </div>
+      <FileLoader
+        onLoad={(traces, selectedNames) => {
+          setTraces(traces)
+          setSelected(selectedNames)
+        }}
+        onError={msg => setError(msg)}
+      />
       {traces && (
         <>
           <SParamSelector traces={traces} selected={selected} onChange={(s: string) => setSelected(prev => prev.includes(s) ? prev.filter(x => x !== s) : [...prev, s])} />
