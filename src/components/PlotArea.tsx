@@ -9,9 +9,9 @@ import { MovingAverageControl } from '../components/MovingAverageControl'
 function getLayoutForSpace(space: 'time' | 'frequency' | 'cepstrum' | 'none'): Partial<Layout> {
   const base: Partial<Layout> = {
     autosize: true,
-    paper_bgcolor: 'rgba(0,0,0,0)',
-    plot_bgcolor: 'rgba(0,0,0,0)',
-    font: { color: '#ffffff' },
+    paper_bgcolor: 'white',
+    plot_bgcolor: 'white',
+    font: { color: 'black' },
     height: 400,
     legend: { orientation: 'h' },
     margin: { t: 30, l: 60, r: 30, b: 60 }
