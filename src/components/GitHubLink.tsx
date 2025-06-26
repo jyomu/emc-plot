@@ -7,6 +7,7 @@ export const GitHubLink: React.FC = () => (
     href={GITHUB_URL}
     target="_blank"
     rel="noopener noreferrer"
+    aria-label="View source on GitHub"
     className="flex items-center gap-2 px-4 py-2 bg-neutral-900 text-white no-underline rounded-md text-sm font-medium shadow transition-colors hover:bg-blue-600"
   >
     <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
