@@ -24,8 +24,9 @@ function toggleSelected(selected: string[], value: string): string[] {
 }
 
 export function SParamChart() {
-  const [traces, setTraces] = useState<PartialPlotData[] | null>(null)
+  const [traces, setTraces] = useState<PartialPlotData[]>([])
   const [selected, setSelected] = useState<string[]>([])
+  const selectedTraces = getSelectedSParamTraces(traces, selected)
 
   return (
     <div className="w-full mx-auto px-4 text-center">
@@ -33,28 +34,25 @@ export function SParamChart() {
       <FileLoader
         onLoad={setTraces}
       />
-      {traces && (
-        <div>
-          <SParamSelector traces={traces} selected={selected} onChange={(s: string) => setSelected(prev => toggleSelected(prev, s))} />
-          <div className="flex flex-col gap-8 my-6">
+      <div>
+        <SParamSelector traces={traces} selected={selected} onChange={(s: string) => setSelected(prev => toggleSelected(prev, s))} />
+        <div className="flex flex-col gap-8 my-6">
+          <PlotSection
+            mode="raw"
+            title="Sパラメータ"
+            traces={selectedTraces}
+            space="frequency"
+          />
+          {(['dft', 'idft'] as const).map(processType => (
             <PlotSection
-              mode="raw"
-              title="Sパラメータ"
-              data={getSelectedSParamTraces(traces, selected)}
-              space="frequency"
+              key={processType}
+              mode="processed"
+              processType={processType}
+              traces={selectedTraces}
             />
-            {(['dft', 'idft'] as const).map(processType => (
-              <PlotSection
-                key={processType}
-                mode="processed"
-                processType={processType}
-                traces={traces}
-                selected={selected}
-              />
-            ))}
-          </div>
+          ))}
         </div>
-      )}
+      </div>
     </div>
   )
 }

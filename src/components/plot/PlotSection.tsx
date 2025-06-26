@@ -11,8 +11,8 @@ import type { PartialPlotData, LogType, ProcessParams } from '../../types/plot'
 export type PlotSpace = 'frequency' | 'time' | 'cepstrum' | 'none'
 
 type PlotSectionProps =
-  | { mode: 'raw', title: string, data: PartialPlotData[], space: PlotSpace }
-  | { mode: 'processed', processType: 'dft' | 'idft', traces: PartialPlotData[], selected: string[] }
+  | { mode: 'raw', title: string, traces: PartialPlotData[], space: PlotSpace }
+  | { mode: 'processed', processType: 'dft' | 'idft', traces: PartialPlotData[] }
 
 const getInitialProcessParams = (type: 'dft' | 'idft'): ProcessParams =>
   type === 'dft'
@@ -24,12 +24,6 @@ export const PlotSection: React.FC<PlotSectionProps> = (props) => {
   const [process, setProcess] = useState<ProcessParams>(
     'mode' in props && props.mode === 'processed' ? getInitialProcessParams(props.processType) : getInitialProcessParams('dft')
   )
-  const spectrumTracesRaw = useMemo(
-    () => 'mode' in props && props.mode === 'processed'
-      ? props.traces?.filter(t => typeof t.name === 'string' && props.selected.includes(t.name)) ?? []
-      : [],
-    [props]
-  )
   const processedTraces = useMemo(() => {
     if ('mode' in props && props.mode === 'processed') {
       const pipeline = [
@@ -37,7 +31,7 @@ export const PlotSection: React.FC<PlotSectionProps> = (props) => {
         logTransform(process.logType),
         process.key === 'dft' ? dftAbs : idftReal
       ]
-      return spectrumTracesRaw.map(t => {
+      return props.traces.map(t => {
         const y = pipeline.reduce((acc, fn) => fn(acc), t.y)
         return {
           ...t,
@@ -47,14 +41,14 @@ export const PlotSection: React.FC<PlotSectionProps> = (props) => {
       })
     }
     return []
-  }, [process, spectrumTracesRaw, props])
+  }, [process, props])
 
   if ('mode' in props && props.mode === 'raw') {
-    const { title, data, space } = props
+    const { title, traces, space } = props
     return (
       <div>
         <div className="font-bold mb-1 flex items-center gap-2">{title}</div>
-        <PlotArea space={space} data={data} />
+        <PlotArea space={space} data={traces} />
       </div>
     )
   } else {
