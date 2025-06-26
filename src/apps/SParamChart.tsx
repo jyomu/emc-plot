@@ -76,18 +76,20 @@ export function SParamChart() {
   return (
     <div className="w-full mx-auto px-4 text-center">
       <h1>Touchstone Sパラメータプロッタ (nポート対応)</h1>
-      <input type="file" accept=".snp,.s2p,.s3p,.s4p" onChange={async (e) => {
-        const file = e.target.files?.[0]
-        if (!file) return
-        try {
-          const traces = await parseTouchstone(file)
-          setTraces(traces)
-          setSelected(traces.map(t => typeof t.name === 'string' && t.name ? t.name : '').filter(Boolean).slice(0, 1))
-          setError(null)
-        } catch (err) {
-          setError('パースエラー: ' + (err instanceof Error ? err.message : String(err)))
-        }
-      }} className="mb-2" />
+      <div className="mb-2 w-full flex justify-center items-center">
+        <input type="file" accept=".snp,.s2p,.s3p,.s4p" onChange={async (e) => {
+          const file = e.target.files?.[0]
+          if (!file) return
+          try {
+            const traces = await parseTouchstone(file)
+            setTraces(traces)
+            setSelected(traces.map(t => typeof t.name === 'string' && t.name ? t.name : '').filter(Boolean).slice(0, 1))
+            setError(null)
+          } catch (err) {
+            setError('パースエラー: ' + (err instanceof Error ? err.message : String(err)))
+          }
+        }} className="mb-2" />
+      </div>
       <div className="mb-2">
         <button onClick={async () => {
           try {

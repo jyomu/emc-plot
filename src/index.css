@@ -17,7 +17,6 @@
     @apply font-sans m-0 min-w-80 min-h-screen;
     display: flex;
     place-items: center;
-    /* 本番と同じ中央寄せ・余白 */
   }
   #root {
     @apply mx-auto p-4 text-center min-h-screen flex flex-col;
@@ -55,7 +54,7 @@
     @apply align-middle;
   }
   input[type="file"] {
-    @apply w-full block text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-semibold file:bg-neutral-900 file:text-white hover:file:bg-blue-600;
+    @apply block text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-semibold file:bg-neutral-900 file:text-white hover:file:bg-blue-600;
   }
 }
 
