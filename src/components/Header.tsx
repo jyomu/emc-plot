@@ -3,19 +3,22 @@ import { GitHubLink } from './GitHubLink'
 
 export const Header: React.FC = () => (
   <header style={{
-    position: 'fixed',
-    top: 16,
-    right: 16,
-    zIndex: 1000,
-    background: 'none',
-    border: 'none',
-    boxShadow: 'none',
     display: 'flex',
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'space-between', // 左右に要素を分ける
+    padding: '16px',
+    background: 'none',
+    border: 'none',
+    boxShadow: 'none',
     gap: 16
   }}>
-    <GitHubLink />
-    {/* 他にヘッダーに追加したい要素があればここに */}
+    <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+      {/* 左詰め要素をここに追加可能 */}
+    </div>
+    <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+      <GitHubLink />
+      {/* 右詰め要素をここに追加可能 */}
+    </div>
   </header>
 )

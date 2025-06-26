@@ -6,7 +6,7 @@ function App() {
   return (
     <>
       <Header />
-      <div style={{ padding: 24 }}>
+      <div>
         <SParamChart />
       </div>
     </>
