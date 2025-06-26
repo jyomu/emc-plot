@@ -134,7 +134,7 @@ class TouchstoneDocument {
   }
 
   getPartialPlotData(): PartialPlotData[] {
-    const { format, freqUnit, z0 } = this.header;
+    const { format } = this.header;
     const nSamples = Math.floor(this.dataArray.allNums.length / (1 + this.nPorts * this.nPorts * 2));
     return this.sParams.map((sParamKey) => {
       const x = Array.from({ length: nSamples }, (_, sampleIdx) => this.dataArray.getFreq(sampleIdx));
@@ -164,7 +164,7 @@ class TouchstoneDocument {
         type: 'scatter',
         mode: 'lines',
         name: sParamKey,
-        meta: { space: 'frequency', format, freqUnit, nPorts: this.nPorts, sParams: this.sParams, z0 },
+        // meta: { space: 'frequency', format, freqUnit, nPorts: this.nPorts, sParams: this.sParams, z0 },
       };
     });
   }
