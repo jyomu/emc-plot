@@ -74,7 +74,7 @@ export function SParamChart() {
   })
 
   return (
-    <>
+    <div className="w-full mx-auto px-4 text-center">
       <h1>Touchstone Sパラメータプロッタ (nポート対応)</h1>
       <input type="file" accept=".snp,.s2p,.s3p,.s4p" onChange={async (e) => {
         const file = e.target.files?.[0]
@@ -87,8 +87,8 @@ export function SParamChart() {
         } catch (err) {
           setError('パースエラー: ' + (err instanceof Error ? err.message : String(err)))
         }
-      }} />
-      <div style={{ marginBottom: 8 }}>
+      }} className="mb-2" />
+      <div className="mb-2">
         <button onClick={async () => {
           try {
             const res = await fetch('/SMA(NARROW11(CP-max).s3p')
@@ -107,30 +107,28 @@ export function SParamChart() {
       {traces && (
         <>
           <SParamSelector traces={traces} selected={selected} onChange={(s: string) => setSelected(prev => prev.includes(s) ? prev.filter(x => x !== s) : [...prev, s])} />
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 32, margin: '24px 0' }}>
+          <div className="flex flex-col gap-8 my-6">
             {/* Sパラメータ空間 */}
             <div>
-              <div style={{ fontWeight: 'bold', marginBottom: 4, display: 'flex', alignItems: 'center', gap: 8 }}>
-                Sパラメータ
-              </div>
+              <div className="font-bold mb-1 flex items-center gap-2">Sパラメータ</div>
               <PlotArea space="frequency" data={sparamTraces} />
             </div>
             {/* DFT空間 */}
             <div>
-              <div style={{ fontWeight: 'bold', marginBottom: 4, display: 'flex', alignItems: 'center', gap: 8 }}>
+              <div className="font-bold mb-1 flex items-center gap-2">
                 DFT
-                <label style={{ marginLeft: 16 }}>
+                <label className="ml-4">
                   <input type="checkbox" checked={dftMaEnabled} onChange={e => setDftMaEnabled(e.target.checked)} /> 移動平均
                 </label>
                 {dftMaEnabled && (
-                  <input type="number" min={2} max={100} value={dftMaWindow} onChange={e => setDftMaWindow(Number(e.target.value))} style={{ width: 60, marginLeft: 8 }} />
+                  <input type="number" min={2} max={100} value={dftMaWindow} onChange={e => setDftMaWindow(Number(e.target.value))} className="w-16 ml-2" />
                 )}
-                <label style={{ marginLeft: 16 }}>
+                <label className="ml-4">
                   log関数:
                   <select value={dftLogType} onChange={e => {
                     const v = e.target.value
                     if (v === 'log' || v === 'log10' || v === 'log2' || v === 'none') setDftLogType(v)
-                  }} style={{ marginLeft: 4 }}>
+                  }} className="ml-1">
                     <option value="log">log</option>
                     <option value="log10">log10</option>
                     <option value="log2">log2</option>
@@ -142,13 +140,13 @@ export function SParamChart() {
             </div>
             {/* IDFT空間 */}
             <div>
-              <div style={{ fontWeight: 'bold', marginBottom: 4, display: 'flex', alignItems: 'center', gap: 8 }}>
+              <div className="font-bold mb-1 flex items-center gap-2">
                 IDFT
-                <label style={{ marginLeft: 16 }}>
+                <label className="ml-4">
                   <input type="checkbox" checked={idftMaEnabled} onChange={e => setIdftMaEnabled(e.target.checked)} /> 移動平均
                 </label>
                 {idftMaEnabled && (
-                  <input type="number" min={2} max={100} value={idftMaWindow} onChange={e => setIdftMaWindow(Number(e.target.value))} style={{ width: 60, marginLeft: 8 }} />
+                  <input type="number" min={2} max={100} value={idftMaWindow} onChange={e => setIdftMaWindow(Number(e.target.value))} className="w-16 ml-2" />
                 )}
               </div>
               <PlotArea space="none" data={idftTraces} />
@@ -156,7 +154,7 @@ export function SParamChart() {
           </div>
         </>
       )}
-      {error && <div style={{ color: 'red' }}>{error}</div>}
-    </>
+      {error && <div className="text-red-500 mt-2">{error}</div>}
+    </div>
   )
 }

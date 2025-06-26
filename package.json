@@ -12,10 +12,12 @@
     "cf-typegen": "wrangler types"
   },
   "dependencies": {
+    "@tailwindcss/vite": "^4.1.10",
     "plotly.js": "^3.0.1",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
-    "react-plotly.js": "^2.6.0"
+    "react-plotly.js": "^2.6.0",
+    "tailwindcss": "^4.1.10"
   },
   "devDependencies": {
     "@cloudflare/vite-plugin": "^1.7.4",

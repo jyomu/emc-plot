@@ -1,7 +1,1 @@
-/* 不要なスタイルを全て削除し、Appで使われているものだけ残す */
-#root {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 1rem;
-  text-align: center;
-}
+/* Tailwind化のため全て削除 */

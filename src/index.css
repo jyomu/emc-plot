@@ -1,61 +1,70 @@
-:root {
-  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
-  line-height: 1.5;
-  font-weight: 400;
+@import "tailwindcss";
 
-  color-scheme: light dark;
-  color: rgba(255, 255, 255, 0.87);
-  background-color: #242424;
-
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
-
-a {
-  font-weight: 500;
-  color: #646cff;
-  text-decoration: inherit;
-}
-a:hover {
-  color: #535bf2;
-}
-
-body {
-  margin: 0;
-  display: flex;
-  place-items: center;
-  min-width: 320px;
-  min-height: 100vh;
-}
-
-h1 {
-  font-size: 3.2em;
-  line-height: 1.1;
-}
-
-button {
-  border-radius: 8px;
-  border: 1px solid transparent;
-  padding: 0.6em 1.2em;
-  font-size: 1em;
-  font-weight: 500;
-  font-family: inherit;
-  background-color: #1a1a1a;
-  cursor: pointer;
-  transition: border-color 0.25s;
-}
-button:hover {
-  border-color: #646cff;
-}
-button:focus,
-button:focus-visible {
-  outline: 4px auto -webkit-focus-ring-color;
+@layer base {
+  html {
+    font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
+    line-height: 1.5;
+    font-weight: 400;
+    color-scheme: light dark;
+    color: rgba(255, 255, 255, 0.87);
+    background-color: #242424;
+    font-synthesis: none;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  body {
+    @apply font-sans m-0 min-w-80 min-h-screen;
+    display: flex;
+    place-items: center;
+    /* 本番と同じ中央寄せ・余白 */
+  }
+  #root {
+    @apply mx-auto p-4 text-center min-h-screen flex flex-col;
+  }
+  a {
+    font-weight: 500;
+    color: #646cff;
+    text-decoration: inherit;
+    @apply font-medium no-underline transition-colors;
+  }
+  a:hover {
+    color: #535bf2;
+    @apply text-blue-300 underline;
+  }
+  h1 {
+    font-size: 3.2em;
+    line-height: 1.1;
+    @apply text-5xl leading-tight;
+  }
+  button, input[type="button"], input[type="submit"] {
+    @apply rounded-md border border-transparent px-4 py-2 font-medium text-base bg-neutral-900 text-white cursor-pointer transition-colors shadow;
+    background-color: #1a1a1a;
+  }
+  button:hover, input[type="button"]:hover, input[type="submit"]:hover {
+    @apply bg-blue-600 border-blue-400;
+  }
+  button:focus, input[type="button"]:focus, input[type="submit"]:focus {
+    outline: 4px auto -webkit-focus-ring-color;
+    outline-offset: 2px;
+  }
+  input[type="number"], input[type="text"], select, textarea {
+    @apply rounded border border-gray-300 px-2 py-1 text-base bg-white text-black focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition;
+  }
+  input[type="checkbox"] {
+    @apply align-middle;
+  }
+  input[type="file"] {
+    @apply block text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-semibold file:bg-neutral-900 file:text-white hover:file:bg-blue-600;
+    max-width: 100%;
+    text-overflow: clip;
+    white-space: normal;
+    overflow: visible;
+  }
 }
 
 @media (prefers-color-scheme: light) {
-  :root {
+  html {
     color: #213547;
     background-color: #ffffff;
   }

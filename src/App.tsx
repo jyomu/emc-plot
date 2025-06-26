@@ -1,12 +1,12 @@
 import { SParamChart } from './apps/SParamChart'
-import './App.css'
 import { Header } from './components/Header'
+import './App.css'
 
 function App() {
   return (
     <>
       <Header />
-      <div>
+      <div className="flex-1 flex flex-col justify-center">
         <SParamChart />
       </div>
     </>
