@@ -4,7 +4,7 @@
  */
 {
 	"$schema": "node_modules/wrangler/config-schema.json",
-	"name": "graph-plot",
+	"name": "emc-plot",
 	"main": "worker/index.ts",
 	"compatibility_date": "2025-06-20",
 	"assets": {
