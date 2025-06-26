@@ -1,6 +1,6 @@
 import React from 'react'
-import { parseTouchstone } from '../utils/parseTouchstone'
-import type { PartialPlotData } from '../types/plot'
+import { parseTouchstone } from '../../utils/parseTouchstone'
+import type { PartialPlotData } from '../../types/plot'
 
 interface FileLoaderProps {
   onLoad: (traces: PartialPlotData[], selectedNames: string[]) => void

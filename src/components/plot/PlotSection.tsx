@@ -5,8 +5,8 @@
 import React, { useMemo, useState } from 'react'
 import { PlotArea } from './PlotArea'
 import { PreprocessControls } from './PreprocessControls'
-import { ma, logTransform, dftAbs, idftReal } from '../utils/pipeline'
-import type { PartialPlotData, LogType, ProcessParams } from '../types/plot'
+import { ma, logTransform, dftAbs, idftReal } from '../../utils/pipeline'
+import type { PartialPlotData, LogType, ProcessParams } from '../../types/plot'
 
 export type PlotSpace = 'frequency' | 'time' | 'cepstrum' | 'none'
 

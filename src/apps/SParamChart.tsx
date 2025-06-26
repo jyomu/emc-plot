@@ -5,9 +5,9 @@
 
 import { useState } from 'react'
 import type { PartialPlotData } from '../types/plot'
-import { SParamSelector } from '../components/SParamSelector'
-import { FileLoader } from '../components/FileLoader'
-import { PlotSection } from '../components/PlotSection'
+import { SParamSelector } from '../components/app/SParamSelector'
+import { FileLoader } from '../components/app/FileLoader'
+import { PlotSection } from '../components/plot/PlotSection'
 
 function getSelectedSParamTraces(traces: PartialPlotData[], selected: string[]): PartialPlotData[] {
   return traces.filter(t => typeof t.name === 'string' && selected.includes(t.name))

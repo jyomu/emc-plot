@@ -3,7 +3,7 @@
 // - UIのみ担当し、ロジックやデータ処理は持たない
 
 import React from 'react'
-import type { LogType } from '../types/plot'
+import type { LogType } from '../../types/plot'
 
 export interface PreprocessControlsProps {
   maEnabled: boolean;
