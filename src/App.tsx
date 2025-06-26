@@ -7,7 +7,6 @@ function App() {
     <>
       <Header />
       <div style={{ padding: 24 }}>
-        <h1>Touchstone Sパラメータプロッタ (nポート対応)</h1>
         <SParamChart />
       </div>
     </>

@@ -75,6 +75,7 @@ export function SParamChart() {
 
   return (
     <>
+      <h1>Touchstone Sパラメータプロッタ (nポート対応)</h1>
       <input type="file" accept=".snp,.s2p,.s3p,.s4p" onChange={async (e) => {
         const file = e.target.files?.[0]
         if (!file) return
