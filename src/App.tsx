@@ -1,12 +1,16 @@
 import { SParamChart } from './apps/SParamChart'
 import './App.css'
+import { Header } from './components/Header'
 
 function App() {
   return (
-    <div style={{ padding: 24 }}>
-      <h1>Touchstone Sパラメータプロッタ (nポート対応)</h1>
-      <SParamChart />
-    </div>
+    <>
+      <Header />
+      <div style={{ padding: 24 }}>
+        <h1>Touchstone Sパラメータプロッタ (nポート対応)</h1>
+        <SParamChart />
+      </div>
+    </>
   )
 }
 
