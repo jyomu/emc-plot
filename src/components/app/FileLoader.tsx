@@ -3,14 +3,13 @@ import { parseTouchstone } from '../../utils/parseTouchstone'
 import type { PartialPlotData } from '../../types/plot'
 
 interface FileLoaderProps {
-  onLoad: (traces: PartialPlotData[], selectedNames: string[]) => void
+  onLoad: (traces: PartialPlotData[]) => void
 }
 
 export const FileLoader: React.FC<FileLoaderProps> = ({ onLoad }) => {
   const handleFile = async (file: File) => {
     const traces = await parseTouchstone(file)
-    const selected = traces.map(t => typeof t.name === 'string' && t.name ? t.name : '').filter(Boolean).slice(0, 1)
-    onLoad(traces, selected)
+    onLoad(traces)
   }
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {

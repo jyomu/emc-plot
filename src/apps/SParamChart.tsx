@@ -17,6 +17,12 @@ function getSelectedSParamTraces(traces: PartialPlotData[], selected: string[]):
     }))
 }
 
+function toggleSelected(selected: string[], value: string): string[] {
+  return selected.includes(value)
+    ? selected.filter(x => x !== value)
+    : [...selected, value]
+}
+
 export function SParamChart() {
   const [traces, setTraces] = useState<PartialPlotData[] | null>(null)
   const [selected, setSelected] = useState<string[]>([])
@@ -25,14 +31,11 @@ export function SParamChart() {
     <div className="w-full mx-auto px-4 text-center">
       <h1>Touchstone Sパラメータプロッタ (nポート対応)</h1>
       <FileLoader
-        onLoad={(traces, selectedNames) => {
-          setTraces(traces)
-          setSelected(selectedNames)
-        }}
+        onLoad={setTraces}
       />
       {traces && (
         <div>
-          <SParamSelector traces={traces} selected={selected} onChange={(s: string) => setSelected(prev => prev.includes(s) ? prev.filter(x => x !== s) : [...prev, s])} />
+          <SParamSelector traces={traces} selected={selected} onChange={(s: string) => setSelected(prev => toggleSelected(prev, s))} />
           <div className="flex flex-col gap-8 my-6">
             <PlotSection
               mode="raw"
