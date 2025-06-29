@@ -6,7 +6,7 @@ import React, { useMemo } from 'react'
 import { PlotArea } from './PlotArea'
 import { PreprocessControls } from './PreprocessControls'
 import { ma, logTransform, dftAbs, idftReal } from '../../utils/pipeline'
-import type { PartialPlotData, LogType, ProcessParams } from '../../types/plot'
+import type { PartialPlotData } from '../../types/plot'
 import { usePlotProcess } from '../../hooks/usePlotProcess'
 
 export type PlotSpace = 'frequency' | 'time' | 'cepstrum' | 'none'
@@ -14,11 +14,6 @@ export type PlotSpace = 'frequency' | 'time' | 'cepstrum' | 'none'
 type PlotSectionProps =
   | { mode: 'raw', title: string, traces: PartialPlotData[], space: PlotSpace }
   | { mode: 'processed', processType: 'dft' | 'idft', traces: PartialPlotData[] }
-
-const getInitialProcessParams = (type: 'dft' | 'idft'): ProcessParams =>
-  type === 'dft'
-    ? { key: 'dft', label: 'DFT', maEnabled: false, maWindow: 50, logType: 'none' }
-    : { key: 'idft', label: 'IDFT', maEnabled: false, maWindow: 50, logType: 'none' }
 
 export const PlotSection: React.FC<PlotSectionProps> = (props) => {
   const isProcessed = 'mode' in props && props.mode === 'processed'
