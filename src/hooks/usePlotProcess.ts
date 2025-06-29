@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import type { ProcessParams, LogType } from '../types/plot'
+import { usePreProcessControls } from './useProcessControls'
 
 const getInitialProcessParams = (type: 'dft' | 'idft'): ProcessParams =>
   type === 'dft'
@@ -8,18 +9,21 @@ const getInitialProcessParams = (type: 'dft' | 'idft'): ProcessParams =>
 
 export function usePlotProcess(type: 'dft' | 'idft') {
   const [process, setProcess] = useState<ProcessParams>(getInitialProcessParams(type))
-  const [showHalf, setShowHalf] = useState(true)
+  const { state: preProcessState } = usePreProcessControls(type)
 
   const setMaEnabled = (v: boolean) => setProcess(s => ({ ...s, maEnabled: v }))
   const setMaWindow = (v: number) => setProcess(s => ({ ...s, maWindow: v }))
   const setLogType = (v: LogType) => setProcess(s => ({ ...s, logType: v }))
 
   return {
-    process,
+    process: {
+      ...process,
+      maEnabled: preProcessState.maEnabled,
+      maWindow: preProcessState.maWindow,
+      logType: preProcessState.logType
+    },
     setMaEnabled,
     setMaWindow,
     setLogType,
-    showHalf,
-    setShowHalf,
   }
 }

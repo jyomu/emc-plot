@@ -1,9 +1,9 @@
 import { useProcessedTraces } from '../../hooks/useProcessedTraces'
 import type { ProcessedTracesMode } from '../../hooks/useProcessedTraces'
 import { usePlotProcess } from '../../hooks/usePlotProcess'
-import { useMovingAverageControl } from '../../hooks/useMovingAverageControl'
-import { MovingAverageControl } from './MovingAverageControl'
+import { usePostProcessControls } from '../../hooks/useProcessControls'
 import { PreprocessControls } from './PreprocessControls'
+import { PostprocessControls } from './PostprocessControls'
 import Plot from 'react-plotly.js'
 import { useMemo } from 'react'
 import { movingAverage } from '../../utils/chartUtils'
@@ -37,19 +37,19 @@ function getLayoutForSpace(space: PlotSpace): Partial<Layout> {
 
 export function SParamPlot(props: { type: ProcessedTracesMode, title?: string, space?: PlotSpace }) {
   const { type, title, space = 'none' } = props
-  const { showMA, setShowMA, maWindow, setMaWindow } = useMovingAverageControl()
+  const { state: postProcessState } = usePostProcessControls()
   const isProcessed = type === 'dft' || type === 'idft'
   const processType = isProcessed ? type : 'dft'
   const process = usePlotProcess(processType)
-  const traces = useProcessedTraces(type, isProcessed ? process.showHalf : false)
+  const traces = useProcessedTraces(type)
 
   const plotData: PartialPlotData[] = useMemo(() => {
     let data = traces.slice()
     
-    if (showMA && maWindow && data.length > 0) {
+    if (postProcessState.showMA && postProcessState.maWindow && data.length > 0) {
       const maTraces = data.map(t => ({
         x: t.x,
-        y: movingAverage(t.y, maWindow),
+        y: movingAverage(t.y, postProcessState.maWindow),
         type: 'scatter' as const,
         mode: 'lines' as const,
         name: t.name ? `${t.name} (MA)` : 'Moving Average',
@@ -58,7 +58,7 @@ export function SParamPlot(props: { type: ProcessedTracesMode, title?: string, s
       data = [...data, ...maTraces]
     }
     return data
-  }, [traces, showMA, maWindow])
+  }, [traces, postProcessState.showMA, postProcessState.maWindow])
 
   return (
     <div>
@@ -67,31 +67,11 @@ export function SParamPlot(props: { type: ProcessedTracesMode, title?: string, s
         <>
           <div className="font-bold mb-1 flex items-center gap-2">
             {process.process.label}
-            <PreprocessControls
-              maEnabled={process.process.maEnabled}
-              maWindow={process.process.maWindow}
-              onMaEnabledChange={process.setMaEnabled}
-              onMaWindowChange={process.setMaWindow}
-              logType={process.process.logType}
-              onLogTypeChange={process.setLogType}
-            />
+            <PreprocessControls processType={processType} />
           </div>
-          <label htmlFor="showHalfCheckbox" style={{ display: 'block', margin: '8px 0' }}>
-            <input
-              id="showHalfCheckbox"
-              type="checkbox"
-              checked={process.showHalf}
-              onChange={e => process.setShowHalf(e.target.checked)}
-            /> DFT/IDFT前半のみ表示
-          </label>
         </>
       )}
-      <MovingAverageControl
-        showMA={showMA}
-        setShowMA={setShowMA}
-        maWindow={maWindow}
-        setMaWindow={setMaWindow}
-      />
+      <PostprocessControls />
       <Plot
         data={plotData}
         layout={getLayoutForSpace(space)}
