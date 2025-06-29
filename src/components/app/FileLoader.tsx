@@ -1,13 +1,11 @@
 import React from 'react'
+import { useTraces } from '../../hooks/useTraces'
 
-interface FileLoaderProps {
-  onFileLoad: (file: File) => void
-}
-
-export const FileLoader: React.FC<FileLoaderProps> = ({ onFileLoad }) => {
+export const FileLoader: React.FC = () => {
+  const { mutate } = useTraces()
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
-    if (file) onFileLoad(file)
+    if (file) mutate(file)
   }
 
   const handleSample = async () => {
@@ -15,7 +13,7 @@ export const FileLoader: React.FC<FileLoaderProps> = ({ onFileLoad }) => {
     if (!res.ok) throw new Error('サンプルファイルの取得に失敗しました')
     const blob = await res.blob()
     const file = new File([blob], 'SMA(NARROW11(CP-max).s3p')
-    onFileLoad(file)
+    mutate(file)
   }
 
   return (

@@ -6,16 +6,12 @@
 import { SParamSelector } from '../components/app/SParamSelector'
 import { FileLoader } from '../components/app/FileLoader'
 import { PlotSection } from '../components/plot/PlotSection'
-import { useTraces } from '../hooks/useTraces'
 
 export function SParamChart() {
-  const { mutate: mutateTraces } = useTraces()
   return (
     <div className="w-full mx-auto px-4 text-center">
       <h1>Touchstone Sパラメータプロッタ (nポート対応)</h1>
-      <FileLoader
-        onFileLoad={mutateTraces}
-      />
+      <FileLoader />
       <div>
         <SParamSelector />
         <div className="flex flex-col gap-8 my-6">
