@@ -58,7 +58,16 @@ export function PlotArea(props: PlotAreaProps) {
   // DFT/IDFT空間かどうか判定（spaceが"none"で使われている場合のみtrueとみなす仮実装）
   const isDFTLike = props.space === 'none'
 
-  const plotData: PartialPlotData[] = props.data.slice()
+  let plotData: PartialPlotData[] = props.data.slice()
+
+  // DFT/IDFT前半のみ表示ロジック
+  if (isDFTLike && showHalf && plotData.length > 0) {
+    plotData = plotData.map(t => ({
+      ...t,
+      x: t.x?.slice(0, Math.floor((t.x?.length ?? t.y.length) / 2)),
+      y: t.y?.slice(0, Math.floor(t.y.length / 2)),
+    }))
+  }
 
   if (showMA && maWindow && plotData.length > 0) {
     const maTraces = plotData
