@@ -1,9 +1,10 @@
 import { useTraces } from '../../hooks/useTraces'
-import { useSelectedTraces } from '../../hooks/useSelectedTraces'
+import { useSelectedSParams } from '../../hooks/useSelectedSParams'
 
 export function SParamSelector() {
   const { sParams } = useTraces()
-  const { selected, toggleSelected } = useSelectedTraces()
+  const { selectedSParams, toggleSelectedSParam } = useSelectedSParams()
+  console.log('SParamSelector sParams:', sParams)
   return (
     <div style={{ margin: '12px 0' }}>
       <label>表示Sパラメータ: </label>
@@ -11,8 +12,8 @@ export function SParamSelector() {
         <label key={s} style={{ marginRight: 8 }}>
           <input
             type="checkbox"
-            checked={selected.includes(s)}
-            onChange={() => toggleSelected(s)}
+            checked={selectedSParams.includes(s)}
+            onChange={() => toggleSelectedSParam(s)}
           />
           {s}
         </label>

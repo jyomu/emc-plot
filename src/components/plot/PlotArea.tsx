@@ -5,9 +5,8 @@ import type { PartialPlotData } from '../../types/plot'
 import type { Layout } from 'plotly.js'
 import { MovingAverageControl } from './MovingAverageControl'
 import { useMovingAverageControl } from '../../hooks/useMovingAverageControl'
-import { useRawTraces } from '../../hooks/useRawTraces'
-import { useDFTTraces } from '../../hooks/useDFTTraces'
-import { useIDFTTraces } from '../../hooks/useIDFTTraces'
+import { useProcessedTraces } from '../../hooks/useProcessedTraces'
+import type { ProcessedTracesMode } from '../../hooks/useProcessedTraces'
 import type { PlotSpace } from './PlotSection'
 
 // 空間ごとのレイアウトを返す関数
@@ -49,20 +48,9 @@ function getLayoutForSpace(space: 'time' | 'frequency' | 'cepstrum' | 'none'): P
   }
 }
 
-export function PlotArea(props: { space: PlotSpace; mode?: 'raw' | 'dft' | 'idft' }) {
+export function PlotArea(props: { space: PlotSpace; mode?: ProcessedTracesMode }) {
   const { showMA, setShowMA, maWindow, setMaWindow } = useMovingAverageControl()
-  const rawTraces = useRawTraces()
-  const dftTraces = useDFTTraces()
-  const idftTraces = useIDFTTraces()
-
-  let traces: PartialPlotData[]
-  if (props.mode === 'dft') {
-    traces = dftTraces
-  } else if (props.mode === 'idft') {
-    traces = idftTraces
-  } else {
-    traces = rawTraces
-  }
+  const traces = useProcessedTraces(props.mode)
 
   const plotData: PartialPlotData[] = useMemo(() => {
     let data = traces.slice()
