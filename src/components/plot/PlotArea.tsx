@@ -1,9 +1,10 @@
 import Plot from 'react-plotly.js'
-import { useMemo, useState } from 'react'
+import { useMemo } from 'react'
 import { movingAverage } from '../../utils/chartUtils'
 import type { PartialPlotData } from '../../types/plot'
 import type { Layout } from 'plotly.js'
 import { MovingAverageControl } from './MovingAverageControl'
+import { useMovingAverageControl } from '../../hooks/useMovingAverageControl'
 
 // 空間ごとのレイアウトを返す関数
 function getLayoutForSpace(space: 'time' | 'frequency' | 'cepstrum' | 'none'): Partial<Layout> {
@@ -51,8 +52,7 @@ type PlotAreaProps =
   | { space: 'none'; data: PartialPlotData[] }
 
 export function PlotArea(props: PlotAreaProps) {
-  const [showMA, setShowMA] = useState(false)
-  const [maWindow, setMaWindow] = useState(50)
+  const { showMA, setShowMA, maWindow, setMaWindow } = useMovingAverageControl()
 
   const plotData: PartialPlotData[] = useMemo(() => {
     let data = props.data.slice()
