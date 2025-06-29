@@ -7,27 +7,21 @@ import { SParamSelector } from '../components/app/SParamSelector'
 import { FileLoader } from '../components/app/FileLoader'
 import { PlotSection } from '../components/plot/PlotSection'
 import { useTraces } from '../hooks/useTraces'
-import { useSelectedTraces } from '../hooks/useSelectedTraces'
-import { useSelectedTracesData } from '../hooks/useSelectedTracesData'
 
 export function SParamChart() {
-  const { allTraces, mutate: mutateTraces } = useTraces()
-  const { selected, toggleSelected } = useSelectedTraces()
-  const displayTraces = useSelectedTracesData(allTraces, selected)
-
+  const { mutate: mutateTraces } = useTraces()
   return (
     <div className="w-full mx-auto px-4 text-center">
       <h1>Touchstone Sパラメータプロッタ (nポート対応)</h1>
       <FileLoader
-        onFileLoad={file => mutateTraces(file)}
+        onFileLoad={mutateTraces}
       />
       <div>
-        <SParamSelector traces={allTraces} selected={selected} onChange={toggleSelected} />
+        <SParamSelector />
         <div className="flex flex-col gap-8 my-6">
           <PlotSection
             mode="raw"
             title="Sパラメータ"
-            traces={displayTraces}
             space="frequency"
           />
           {(['dft', 'idft'] as const).map(processType => (
@@ -35,7 +29,6 @@ export function SParamChart() {
               key={processType}
               mode="processed"
               processType={processType}
-              traces={displayTraces}
             />
           ))}
         </div>

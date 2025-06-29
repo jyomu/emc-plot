@@ -2,60 +2,22 @@
 // - データやコントロールはpropsで受け取り、ロジックは持たない
 // - UI構造の共通化・再利用性向上が目的
 
-import React, { useMemo } from 'react'
 import { PlotArea } from './PlotArea'
 import { PreprocessControls } from './PreprocessControls'
-import { ma, logTransform, dftAbs, idftReal } from '../../utils/pipeline'
-import type { PartialPlotData } from '../../types/plot'
 import { usePlotProcess } from '../../hooks/usePlotProcess'
 
 export type PlotSpace = 'frequency' | 'time' | 'cepstrum' | 'none'
 
-type PlotSectionProps =
-  | { mode: 'raw', title: string, traces: PartialPlotData[], space: PlotSpace }
-  | { mode: 'processed', processType: 'dft' | 'idft', traces: PartialPlotData[] }
-
-export const PlotSection: React.FC<PlotSectionProps> = (props) => {
+export function PlotSection(props: { mode: 'raw', title: string, space: PlotSpace } | { mode: 'processed', processType: 'dft' | 'idft' }) {
   const isProcessed = 'mode' in props && props.mode === 'processed'
   const processType = isProcessed ? props.processType : 'dft'
   const { process, setMaEnabled, setMaWindow, setLogType, showHalf, setShowHalf } = usePlotProcess(processType)
 
-  const processedTraces = useMemo(() => {
-    if (isProcessed) {
-      const pipeline = [
-        ma(process.maEnabled, process.maWindow),
-        logTransform(process.logType),
-        process.key === 'dft' ? dftAbs : idftReal
-      ]
-      return props.traces.map(t => {
-        const y = pipeline.reduce((acc, fn) => fn(acc), t.y)
-        return {
-          ...t,
-          y,
-          name: t.name + (process.key === 'dft' ? ' (DFT)' : ' (IDFT)')
-        }
-      })
-    }
-    return []
-  }, [isProcessed, process, props])
-
-  const displayedTraces = useMemo(() => {
-    if (isProcessed && showHalf && processedTraces.length > 0) {
-      return processedTraces.map(t => ({
-        ...t,
-        x: (t.x ?? []).slice(0, Math.floor((t.x?.length ?? t.y.length) / 2)),
-        y: t.y?.slice(0, Math.floor(t.y.length / 2)),
-      }))
-    }
-    return processedTraces
-  }, [isProcessed, processedTraces, showHalf])
-
-  if ('mode' in props && props.mode === 'raw') {
-    const { title, traces, space } = props
+  if (props.mode === 'raw') {
     return (
       <div>
-        <div className="font-bold mb-1 flex items-center gap-2">{title}</div>
-        <PlotArea space={space} data={traces} />
+        <div className="font-bold mb-1 flex items-center gap-2">{props.title}</div>
+        <PlotArea space={props.space} mode="raw" />
       </div>
     )
   } else {
@@ -80,7 +42,7 @@ export const PlotSection: React.FC<PlotSectionProps> = (props) => {
             onChange={e => setShowHalf(e.target.checked)}
           /> DFT/IDFT前半のみ表示
         </label>
-        <PlotArea space="none" data={displayedTraces} />
+        <PlotArea space="none" mode={processType} />
       </div>
     )
   }

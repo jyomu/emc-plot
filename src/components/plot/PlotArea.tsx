@@ -5,6 +5,10 @@ import type { PartialPlotData } from '../../types/plot'
 import type { Layout } from 'plotly.js'
 import { MovingAverageControl } from './MovingAverageControl'
 import { useMovingAverageControl } from '../../hooks/useMovingAverageControl'
+import { useRawTraces } from '../../hooks/useRawTraces'
+import { useDFTTraces } from '../../hooks/useDFTTraces'
+import { useIDFTTraces } from '../../hooks/useIDFTTraces'
+import type { PlotSpace } from './PlotSection'
 
 // 空間ごとのレイアウトを返す関数
 function getLayoutForSpace(space: 'time' | 'frequency' | 'cepstrum' | 'none'): Partial<Layout> {
@@ -45,17 +49,23 @@ function getLayoutForSpace(space: 'time' | 'frequency' | 'cepstrum' | 'none'): P
   }
 }
 
-type PlotAreaProps =
-  | { space: 'time'; data: PartialPlotData[] }
-  | { space: 'frequency'; data: PartialPlotData[] }
-  | { space: 'cepstrum'; data: PartialPlotData[] }
-  | { space: 'none'; data: PartialPlotData[] }
-
-export function PlotArea(props: PlotAreaProps) {
+export function PlotArea(props: { space: PlotSpace; mode?: 'raw' | 'dft' | 'idft' }) {
   const { showMA, setShowMA, maWindow, setMaWindow } = useMovingAverageControl()
+  const rawTraces = useRawTraces()
+  const dftTraces = useDFTTraces()
+  const idftTraces = useIDFTTraces()
+
+  let traces: PartialPlotData[]
+  if (props.mode === 'dft') {
+    traces = dftTraces
+  } else if (props.mode === 'idft') {
+    traces = idftTraces
+  } else {
+    traces = rawTraces
+  }
 
   const plotData: PartialPlotData[] = useMemo(() => {
-    let data = props.data.slice()
+    let data = traces.slice()
     if (showMA && maWindow && data.length > 0) {
       const maTraces = data.map(t => ({
         x: t.x,
@@ -68,7 +78,7 @@ export function PlotArea(props: PlotAreaProps) {
       data = [...data, ...maTraces]
     }
     return data
-  }, [props.data, showMA, maWindow])
+  }, [traces, showMA, maWindow])
 
   return (
     <div>
