@@ -1,5 +1,5 @@
 import React from 'react'
-import { useTraces } from '../../hooks/useTraces'
+import { useTraces } from '../../hooks/data/useTraces'
 
 export const FileLoader: React.FC = () => {
   const { mutate } = useTraces()

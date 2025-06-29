@@ -1,5 +1,5 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import type { LogType } from '../types/plot'
+import type { LogType } from '../../types/plot'
 
 /**
  * DFT/IDFT処理前のデータ変換設定

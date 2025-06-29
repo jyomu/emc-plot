@@ -1,9 +1,9 @@
 import { useMemo } from 'react'
-import { useTraces } from './useTraces'
-import { useSelectedSParams } from './useSelectedSParams'
-import { dftAbs, idftReal, ma, logTransform } from '../utils/pipeline'
-import { usePreProcessControls } from './useProcessControls'
-import type { PartialPlotData } from '../types/plot'
+import { useTraces } from '../data/useTraces'
+import { useSelectedSParams } from '../state/useSelectedSParams'
+import { dftAbs, idftReal, ma, logTransform } from '../../utils/pipeline'
+import { usePreProcessControls } from '../state/useProcessControls'
+import type { PartialPlotData } from '../../types/plot'
 
 export type ProcessedTracesMode = 'raw' | 'dft' | 'idft'
 

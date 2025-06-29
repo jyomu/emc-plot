@@ -4,7 +4,7 @@
 // - UIのみ担当し、ロジックやデータ処理は持たない
 
 import React from 'react'
-import { usePostProcessControls } from '../../hooks/useProcessControls'
+import { usePostProcessControls } from '../../hooks/state/useProcessControls'
 
 export const PostprocessControls: React.FC = () => {
   const { state, setShowMA, setMaWindow } = usePostProcessControls()

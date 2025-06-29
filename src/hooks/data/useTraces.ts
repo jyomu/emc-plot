@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { parseTouchstone } from '../utils/parseTouchstone'
-import type { PartialPlotData } from '../types/plot'
+import { parseTouchstone } from '../../utils/parseTouchstone'
+import type { PartialPlotData } from '../../types/plot'
 
 export interface TracesState {
   allTraces: PartialPlotData[]

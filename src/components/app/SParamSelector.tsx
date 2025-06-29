@@ -1,5 +1,5 @@
-import { useTraces } from '../../hooks/useTraces'
-import { useSelectedSParams } from '../../hooks/useSelectedSParams'
+import { useTraces } from '../../hooks/data/useTraces'
+import { useSelectedSParams } from '../../hooks/state/useSelectedSParams'
 
 export function SParamSelector() {
   const { sParams } = useTraces()

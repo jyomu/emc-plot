@@ -3,7 +3,7 @@
 // - UIのみ担当し、ロジックやデータ処理は持たない
 
 import React from 'react'
-import { usePreProcessControls } from '../../hooks/useProcessControls'
+import { usePreProcessControls } from '../../hooks/state/useProcessControls'
 
 interface PreprocessControlsProps {
   processType: 'dft' | 'idft'
