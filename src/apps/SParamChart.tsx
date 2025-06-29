@@ -1,7 +1,7 @@
 // SParamChart: Touchstoneファイルのロード・選択・グラフ表示をまとめる最上位UI
 import { FileLoader } from '../components/app/FileLoader'
 import { SParamSelector } from '../components/app/SParamSelector'
-import { PlotSection } from '../components/plot/PlotSection'
+import { SParamPlot } from '../components/plot/SParamPlot'
 
 export function SParamChart() {
   return (
@@ -10,9 +10,9 @@ export function SParamChart() {
       <FileLoader />
       <SParamSelector />
       <section className="flex flex-col gap-8 my-6">
-        <PlotSection mode="raw" title="Sパラメータ" space="frequency" />
-        <PlotSection mode="processed" processType="dft" />
-        <PlotSection mode="processed" processType="idft" />
+        <SParamPlot type="raw" title="Sパラメータ" space="frequency" />
+        <SParamPlot type="dft" />
+        <SParamPlot type="idft" />
       </section>
     </main>
   )

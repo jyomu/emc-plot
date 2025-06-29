@@ -1,4 +1,4 @@
-import { useProcessedTraces } from '../../hooks/useTracesData'
+import { useProcessedTraces } from '../../hooks/useProcessedTraces'
 import type { ProcessedTracesMode } from '../../hooks/useProcessedTraces'
 import { usePlotProcess } from '../../hooks/usePlotProcess'
 import { useMovingAverageControl } from '../../hooks/useMovingAverageControl'
