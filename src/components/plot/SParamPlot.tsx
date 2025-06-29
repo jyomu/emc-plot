@@ -37,14 +37,15 @@ function getLayoutForSpace(space: PlotSpace): Partial<Layout> {
 
 export function SParamPlot(props: { type: ProcessedTracesMode, title?: string, space?: PlotSpace }) {
   const { type, title, space = 'none' } = props
-  const traces = useProcessedTraces(type)
   const { showMA, setShowMA, maWindow, setMaWindow } = useMovingAverageControl()
   const isProcessed = type === 'dft' || type === 'idft'
   const processType = isProcessed ? type : 'dft'
   const process = usePlotProcess(processType)
+  const traces = useProcessedTraces(type, isProcessed ? process.showHalf : false)
 
   const plotData: PartialPlotData[] = useMemo(() => {
     let data = traces.slice()
+    
     if (showMA && maWindow && data.length > 0) {
       const maTraces = data.map(t => ({
         x: t.x,
