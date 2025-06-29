@@ -3,13 +3,13 @@
 // Sパラメータ空間のデータ生成のみローカルで担当
 // 依存スコープを最小化し、親子の結合を極力減らす
 
-import { useState } from 'react'
 import { useMutation } from '@tanstack/react-query'
 import type { PartialPlotData } from '../types/plot'
 import { SParamSelector } from '../components/app/SParamSelector'
 import { FileLoader } from '../components/app/FileLoader'
 import { PlotSection } from '../components/plot/PlotSection'
 import { parseTouchstone } from '../utils/parseTouchstone'
+import { useSelectedTraces } from '../hooks/useSelectedTraces'
 
 function getSelectedSParamTraces(traces: PartialPlotData[], selected: string[]): PartialPlotData[] {
   return traces.filter(t => typeof t.name === 'string' && selected.includes(t.name))
@@ -19,15 +19,8 @@ function getSelectedSParamTraces(traces: PartialPlotData[], selected: string[]):
     }))
 }
 
-function toggleSelected(selected: string[], value: string): string[] {
-  return selected.includes(value)
-    ? selected.filter(x => x !== value)
-    : [...selected, value]
-}
-
 export function SParamChart() {
-  // tracesの管理をuseMutationで置き換え
-  const [selected, setSelected] = useState<string[]>([])
+  const { selected, toggleSelected } = useSelectedTraces()
   const mutation = useMutation({
     mutationFn: async (file: File) => {
       return await parseTouchstone(file)
@@ -43,7 +36,7 @@ export function SParamChart() {
         onFileLoad={file => mutation.mutate(file)}
       />
       <div>
-        <SParamSelector traces={traces} selected={selected} onChange={(s: string) => setSelected(prev => toggleSelected(prev, s))} />
+        <SParamSelector traces={traces} selected={selected} onChange={toggleSelected} />
         <div className="flex flex-col gap-8 my-6">
           <PlotSection
             mode="raw"
