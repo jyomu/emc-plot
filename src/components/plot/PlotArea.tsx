@@ -53,18 +53,22 @@ type PlotAreaProps =
 export function PlotArea(props: PlotAreaProps) {
   const [showMA, setShowMA] = useState(false)
   const [maWindow, setMaWindow] = useState(50)
+  const [showHalf, setShowHalf] = useState(false)
+
+  // DFT/IDFT空間かどうか判定（spaceが"none"で使われている場合のみtrueとみなす仮実装）
+  const isDFTLike = props.space === 'none'
 
   const plotData: PartialPlotData[] = props.data.slice()
 
   if (showMA && maWindow && plotData.length > 0) {
     const maTraces = plotData
       .map(t => ({
-      x: t.x,
-      y: movingAverage(t.y, maWindow),
-      type: 'scatter' as const,
-      mode: 'lines' as const,
-      name: t.name ? `${t.name} (MA)` : 'Moving Average',
-      line: { dash: 'dash' as const },
+        x: t.x,
+        y: movingAverage(t.y, maWindow),
+        type: 'scatter' as const,
+        mode: 'lines' as const,
+        name: t.name ? `${t.name} (MA)` : 'Moving Average',
+        line: { dash: 'dash' as const },
       }))
     plotData.push(...maTraces)
   }
@@ -77,6 +81,15 @@ export function PlotArea(props: PlotAreaProps) {
         maWindow={maWindow}
         setMaWindow={setMaWindow}
       />
+      {isDFTLike && (
+        <label style={{ display: 'block', margin: '8px 0' }}>
+          <input
+            type="checkbox"
+            checked={showHalf}
+            onChange={e => setShowHalf(e.target.checked)}
+          /> DFT/IDFT前半のみ表示
+        </label>
+      )}
       <Plot
         data={plotData}
         layout={getLayoutForSpace(props.space)}
@@ -85,8 +98,7 @@ export function PlotArea(props: PlotAreaProps) {
         config={{ 
           responsive: true,
           editable: true,
-          
-         }}
+        }}
       />
     </div>
   )
