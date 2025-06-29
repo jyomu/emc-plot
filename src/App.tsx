@@ -1,5 +1,5 @@
 import { SParamChart } from './apps/SParamChart'
-import { Header } from './components/Header'
+import { Header } from './components/ui/Header'
 
 function App() {
   return (

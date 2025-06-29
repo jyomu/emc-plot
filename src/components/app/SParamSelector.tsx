@@ -1,4 +1,4 @@
-import type { PartialPlotData } from '../types/plot'
+import type { PartialPlotData } from '../../types/plot'
 
 export function SParamSelector({ traces, selected, onChange }: { traces: PartialPlotData[]; selected: string[]; onChange: (s: string) => void }) {
   const sParams = traces.map(t => typeof t.name === 'string' ? t.name : '').filter(Boolean)
