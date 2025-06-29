@@ -9,9 +9,9 @@ export function useTraces() {
       return await parseTouchstone(file)
     },
     onSuccess: (data) => {
-      queryClient.setQueryData(['traces'], data)
+      queryClient.setQueryData(['allTraces'], data)
     }
   })
-  const traces = queryClient.getQueryData<PartialPlotData[]>(['traces']) || []
-  return { traces, mutate: mutation.mutate, status: mutation.status }
+  const allTraces = queryClient.getQueryData<PartialPlotData[]>(['allTraces']) || []
+  return { allTraces, mutate: mutation.mutate, status: mutation.status }
 }

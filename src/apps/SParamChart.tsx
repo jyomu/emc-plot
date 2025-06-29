@@ -11,9 +11,9 @@ import { useSelectedTraces } from '../hooks/useSelectedTraces'
 import { useSelectedTracesData } from '../hooks/useSelectedTracesData'
 
 export function SParamChart() {
+  const { allTraces, mutate: mutateTraces } = useTraces()
   const { selected, toggleSelected } = useSelectedTraces()
-  const { traces, mutate: mutateTraces } = useTraces()
-  const selectedTraces = useSelectedTracesData(traces, selected)
+  const displayTraces = useSelectedTracesData(allTraces, selected)
 
   return (
     <div className="w-full mx-auto px-4 text-center">
@@ -22,12 +22,12 @@ export function SParamChart() {
         onFileLoad={file => mutateTraces(file)}
       />
       <div>
-        <SParamSelector traces={traces} selected={selected} onChange={toggleSelected} />
+        <SParamSelector traces={allTraces} selected={selected} onChange={toggleSelected} />
         <div className="flex flex-col gap-8 my-6">
           <PlotSection
             mode="raw"
             title="Sパラメータ"
-            traces={selectedTraces}
+            traces={displayTraces}
             space="frequency"
           />
           {(['dft', 'idft'] as const).map(processType => (
@@ -35,7 +35,7 @@ export function SParamChart() {
               key={processType}
               mode="processed"
               processType={processType}
-              traces={selectedTraces}
+              traces={displayTraces}
             />
           ))}
         </div>
