@@ -53,7 +53,7 @@ type PlotAreaProps =
 export function PlotArea(props: PlotAreaProps) {
   const [showMA, setShowMA] = useState(false)
   const [maWindow, setMaWindow] = useState(50)
-  const [showHalf, setShowHalf] = useState(false)
+  const [showHalf, setShowHalf] = useState(true)
 
   // DFT/IDFT空間かどうか判定（spaceが"none"で使われている場合のみtrueとみなす仮実装）
   const isDFTLike = props.space === 'none'
