@@ -8,8 +8,13 @@ interface FileLoaderProps {
 
 export const FileLoader: React.FC<FileLoaderProps> = ({ onLoad }) => {
   const handleFile = async (file: File) => {
-    const traces = await parseTouchstone(file)
-    onLoad(traces)
+    try {
+      const traces = await parseTouchstone(file)
+      onLoad(traces)
+    } catch (error) {
+      console.error('Error parsing Touchstone file:', error)
+      alert('Failed to parse the file. Please check the file format and try again.')
+    }
   }
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
