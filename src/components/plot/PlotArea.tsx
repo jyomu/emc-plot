@@ -1,5 +1,5 @@
 import Plot from 'react-plotly.js'
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { movingAverage } from '../../utils/chartUtils'
 import type { PartialPlotData } from '../../types/plot'
 import type { Layout } from 'plotly.js'
@@ -53,25 +53,11 @@ type PlotAreaProps =
 export function PlotArea(props: PlotAreaProps) {
   const [showMA, setShowMA] = useState(false)
   const [maWindow, setMaWindow] = useState(50)
-  const [showHalf, setShowHalf] = useState(true)
 
-  // DFT/IDFT空間かどうか判定（spaceが"none"で使われている場合のみtrueとみなす仮実装）
-  const isDFTLike = props.space === 'none'
-
-  let plotData: PartialPlotData[] = props.data.slice()
-
-  // DFT/IDFT前半のみ表示ロジック
-  if (isDFTLike && showHalf && plotData.length > 0) {
-    plotData = plotData.map(t => ({
-      ...t,
-      x: t.x?.slice(0, Math.floor((t.x?.length ?? t.y.length) / 2)),
-      y: t.y?.slice(0, Math.floor(t.y.length / 2)),
-    }))
-  }
-
-  if (showMA && maWindow && plotData.length > 0) {
-    const maTraces = plotData
-      .map(t => ({
+  const plotData: PartialPlotData[] = useMemo(() => {
+    let data = props.data.slice()
+    if (showMA && maWindow && data.length > 0) {
+      const maTraces = data.map(t => ({
         x: t.x,
         y: movingAverage(t.y, maWindow),
         type: 'scatter' as const,
@@ -79,8 +65,10 @@ export function PlotArea(props: PlotAreaProps) {
         name: t.name ? `${t.name} (MA)` : 'Moving Average',
         line: { dash: 'dash' as const },
       }))
-    plotData.push(...maTraces)
-  }
+      data = [...data, ...maTraces]
+    }
+    return data
+  }, [props.data, showMA, maWindow])
 
   return (
     <div>
@@ -90,15 +78,6 @@ export function PlotArea(props: PlotAreaProps) {
         maWindow={maWindow}
         setMaWindow={setMaWindow}
       />
-      {isDFTLike && (
-        <label style={{ display: 'block', margin: '8px 0' }}>
-          <input
-            type="checkbox"
-            checked={showHalf}
-            onChange={e => setShowHalf(e.target.checked)}
-          /> DFT/IDFT前半のみ表示
-        </label>
-      )}
       <Plot
         data={plotData}
         layout={getLayoutForSpace(props.space)}

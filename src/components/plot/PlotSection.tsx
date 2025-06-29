@@ -24,6 +24,8 @@ export const PlotSection: React.FC<PlotSectionProps> = (props) => {
   const [process, setProcess] = useState<ProcessParams>(
     'mode' in props && props.mode === 'processed' ? getInitialProcessParams(props.processType) : getInitialProcessParams('dft')
   )
+  const [showHalf, setShowHalf] = useState(true)
+
   const processedTraces = useMemo(() => {
     if ('mode' in props && props.mode === 'processed') {
       const pipeline = [
@@ -42,6 +44,18 @@ export const PlotSection: React.FC<PlotSectionProps> = (props) => {
     }
     return []
   }, [process, props])
+
+  // processedTracesをさらに「前半のみ」スライス
+  const displayedTraces = useMemo(() => {
+    if ('mode' in props && props.mode === 'processed' && showHalf && processedTraces.length > 0) {
+      return processedTraces.map(t => ({
+        ...t,
+        x: (t.x ?? []).slice(0, Math.floor((t.x?.length ?? t.y.length) / 2)),
+        y: t.y?.slice(0, Math.floor(t.y.length / 2)),
+      }))
+    }
+    return processedTraces
+  }, [processedTraces, showHalf, props])
 
   if ('mode' in props && props.mode === 'raw') {
     const { title, traces, space } = props
@@ -65,7 +79,14 @@ export const PlotSection: React.FC<PlotSectionProps> = (props) => {
             onLogTypeChange={(v: LogType) => setProcess(s => ({ ...s, logType: v }))}
           />
         </div>
-        <PlotArea space="none" data={processedTraces} />
+        <label style={{ display: 'block', margin: '8px 0' }}>
+          <input
+            type="checkbox"
+            checked={showHalf}
+            onChange={e => setShowHalf(e.target.checked)}
+          /> DFT/IDFT前半のみ表示
+        </label>
+        <PlotArea space="none" data={displayedTraces} />
       </div>
     )
   }
