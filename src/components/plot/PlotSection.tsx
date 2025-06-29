@@ -2,11 +2,12 @@
 // - データやコントロールはpropsで受け取り、ロジックは持たない
 // - UI構造の共通化・再利用性向上が目的
 
-import React, { useMemo, useState } from 'react'
+import React, { useMemo } from 'react'
 import { PlotArea } from './PlotArea'
 import { PreprocessControls } from './PreprocessControls'
 import { ma, logTransform, dftAbs, idftReal } from '../../utils/pipeline'
 import type { PartialPlotData, LogType, ProcessParams } from '../../types/plot'
+import { usePlotProcess } from '../../hooks/usePlotProcess'
 
 export type PlotSpace = 'frequency' | 'time' | 'cepstrum' | 'none'
 
@@ -20,14 +21,12 @@ const getInitialProcessParams = (type: 'dft' | 'idft'): ProcessParams =>
     : { key: 'idft', label: 'IDFT', maEnabled: false, maWindow: 50, logType: 'none' }
 
 export const PlotSection: React.FC<PlotSectionProps> = (props) => {
-  // Hooksは常に呼ぶ
-  const [process, setProcess] = useState<ProcessParams>(
-    'mode' in props && props.mode === 'processed' ? getInitialProcessParams(props.processType) : getInitialProcessParams('dft')
-  )
-  const [showHalf, setShowHalf] = useState(true)
+  const isProcessed = 'mode' in props && props.mode === 'processed'
+  const processType = isProcessed ? props.processType : 'dft'
+  const { process, setMaEnabled, setMaWindow, setLogType, showHalf, setShowHalf } = usePlotProcess(processType)
 
   const processedTraces = useMemo(() => {
-    if ('mode' in props && props.mode === 'processed') {
+    if (isProcessed) {
       const pipeline = [
         ma(process.maEnabled, process.maWindow),
         logTransform(process.logType),
@@ -43,11 +42,10 @@ export const PlotSection: React.FC<PlotSectionProps> = (props) => {
       })
     }
     return []
-  }, [process, props])
+  }, [isProcessed, process, props])
 
-  // processedTracesをさらに「前半のみ」スライス
   const displayedTraces = useMemo(() => {
-    if ('mode' in props && props.mode === 'processed' && showHalf && processedTraces.length > 0) {
+    if (isProcessed && showHalf && processedTraces.length > 0) {
       return processedTraces.map(t => ({
         ...t,
         x: (t.x ?? []).slice(0, Math.floor((t.x?.length ?? t.y.length) / 2)),
@@ -55,7 +53,7 @@ export const PlotSection: React.FC<PlotSectionProps> = (props) => {
       }))
     }
     return processedTraces
-  }, [processedTraces, showHalf, props])
+  }, [isProcessed, processedTraces, showHalf])
 
   if ('mode' in props && props.mode === 'raw') {
     const { title, traces, space } = props
@@ -73,10 +71,10 @@ export const PlotSection: React.FC<PlotSectionProps> = (props) => {
           <PreprocessControls
             maEnabled={process.maEnabled}
             maWindow={process.maWindow}
-            onMaEnabledChange={(v: boolean) => setProcess(s => ({ ...s, maEnabled: v }))}
-            onMaWindowChange={(v: number) => setProcess(s => ({ ...s, maWindow: v }))}
+            onMaEnabledChange={setMaEnabled}
+            onMaWindowChange={setMaWindow}
             logType={process.logType}
-            onLogTypeChange={(v: LogType) => setProcess(s => ({ ...s, logType: v }))}
+            onLogTypeChange={setLogType}
           />
         </div>
         <label htmlFor="showHalfCheckbox" style={{ display: 'block', margin: '8px 0' }}>
