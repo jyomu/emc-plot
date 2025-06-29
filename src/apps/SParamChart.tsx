@@ -1,58 +1,19 @@
-// SParamChart: アプリ全体の状態管理（ファイルロード・トレース選択）と各空間プロットの組み立てのみ担当
-// 各空間のロジック・状態・UIはSpacePlotに委譲
-// Sパラメータ空間のデータ生成のみローカルで担当
-// 依存スコープを最小化し、親子の結合を極力減らす
-
-import { useState } from 'react'
-import type { PartialPlotData } from '../types/plot'
-import { SParamSelector } from '../components/app/SParamSelector'
+// SParamChart: Touchstoneファイルのロード・選択・グラフ表示をまとめる最上位UI
 import { FileLoader } from '../components/app/FileLoader'
-import { PlotSection } from '../components/plot/PlotSection'
-
-function getSelectedSParamTraces(traces: PartialPlotData[], selected: string[]): PartialPlotData[] {
-  return traces.filter(t => typeof t.name === 'string' && selected.includes(t.name))
-    .map(t => ({
-      ...t,
-      name: t.name + ' (Sパラメータ)'
-    }))
-}
-
-function toggleSelected(selected: string[], value: string): string[] {
-  return selected.includes(value)
-    ? selected.filter(x => x !== value)
-    : [...selected, value]
-}
+import { SParamSelector } from '../components/app/SParamSelector'
+import { SParamPlot } from '../components/plot/SParamPlot'
 
 export function SParamChart() {
-  const [traces, setTraces] = useState<PartialPlotData[]>([])
-  const [selected, setSelected] = useState<string[]>([])
-  const selectedTraces = getSelectedSParamTraces(traces, selected)
-
   return (
-    <div className="w-full mx-auto px-4 text-center">
+    <main className="w-full mx-auto px-4 text-center">
       <h1>Touchstone Sパラメータプロッタ (nポート対応)</h1>
-      <FileLoader
-        onLoad={setTraces}
-      />
-      <div>
-        <SParamSelector traces={traces} selected={selected} onChange={(s: string) => setSelected(prev => toggleSelected(prev, s))} />
-        <div className="flex flex-col gap-8 my-6">
-          <PlotSection
-            mode="raw"
-            title="Sパラメータ"
-            traces={selectedTraces}
-            space="frequency"
-          />
-          {(['dft', 'idft'] as const).map(processType => (
-            <PlotSection
-              key={processType}
-              mode="processed"
-              processType={processType}
-              traces={selectedTraces}
-            />
-          ))}
-        </div>
-      </div>
-    </div>
+      <FileLoader />
+      <SParamSelector />
+      <section className="flex flex-col gap-8 my-6">
+        <SParamPlot type="raw" title="Sパラメータ" space="frequency" />
+        <SParamPlot type="dft" />
+        <SParamPlot type="idft" />
+      </section>
+    </main>
   )
 }

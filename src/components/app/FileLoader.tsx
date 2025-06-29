@@ -1,25 +1,11 @@
 import React from 'react'
-import { parseTouchstone } from '../../utils/parseTouchstone'
-import type { PartialPlotData } from '../../types/plot'
+import { useTraces } from '../../hooks/data/useTraces'
 
-interface FileLoaderProps {
-  onLoad: (traces: PartialPlotData[]) => void
-}
-
-export const FileLoader: React.FC<FileLoaderProps> = ({ onLoad }) => {
-  const handleFile = async (file: File) => {
-    try {
-      const traces = await parseTouchstone(file)
-      onLoad(traces)
-    } catch (error) {
-      console.error('Error parsing Touchstone file:', error)
-      alert('Failed to parse the file. Please check the file format and try again.')
-    }
-  }
-
+export const FileLoader: React.FC = () => {
+  const { mutate } = useTraces()
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
-    if (file) handleFile(file)
+    if (file) mutate(file)
   }
 
   const handleSample = async () => {
@@ -27,7 +13,7 @@ export const FileLoader: React.FC<FileLoaderProps> = ({ onLoad }) => {
     if (!res.ok) throw new Error('サンプルファイルの取得に失敗しました')
     const blob = await res.blob()
     const file = new File([blob], 'SMA(NARROW11(CP-max).s3p')
-    await handleFile(file)
+    mutate(file)
   }
 
   return (
