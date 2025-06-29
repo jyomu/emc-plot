@@ -1,5 +1,5 @@
 import Plot from 'react-plotly.js'
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { movingAverage } from '../../utils/chartUtils'
 import type { PartialPlotData } from '../../types/plot'
 import type { Layout } from 'plotly.js'
@@ -54,20 +54,21 @@ export function PlotArea(props: PlotAreaProps) {
   const [showMA, setShowMA] = useState(false)
   const [maWindow, setMaWindow] = useState(50)
 
-  const plotData: PartialPlotData[] = props.data.slice()
-
-  if (showMA && maWindow && plotData.length > 0) {
-    const maTraces = plotData
-      .map(t => ({
-      x: t.x,
-      y: movingAverage(t.y, maWindow),
-      type: 'scatter' as const,
-      mode: 'lines' as const,
-      name: t.name ? `${t.name} (MA)` : 'Moving Average',
-      line: { dash: 'dash' as const },
+  const plotData: PartialPlotData[] = useMemo(() => {
+    let data = props.data.slice()
+    if (showMA && maWindow && data.length > 0) {
+      const maTraces = data.map(t => ({
+        x: t.x,
+        y: movingAverage(t.y, maWindow),
+        type: 'scatter' as const,
+        mode: 'lines' as const,
+        name: t.name ? `${t.name} (MA)` : 'Moving Average',
+        line: { dash: 'dash' as const },
       }))
-    plotData.push(...maTraces)
-  }
+      data = [...data, ...maTraces]
+    }
+    return data
+  }, [props.data, showMA, maWindow])
 
   return (
     <div>
@@ -85,8 +86,7 @@ export function PlotArea(props: PlotAreaProps) {
         config={{ 
           responsive: true,
           editable: true,
-          
-         }}
+        }}
       />
     </div>
   )
