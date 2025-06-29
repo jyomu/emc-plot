@@ -1,29 +1,16 @@
-import { useState } from 'react'
-import type { ProcessParams, LogType } from '../types/plot'
-import { usePreProcessControls } from './useProcessControls'
+// UI表示用のプロセス情報を提供するシンプルなhook
+// 実際の制御はusePreProcessControlsで行う
 
-const getInitialProcessParams = (type: 'dft' | 'idft'): ProcessParams =>
-  type === 'dft'
-    ? { key: 'dft', label: 'DFT', maEnabled: false, maWindow: 50, logType: 'none' }
-    : { key: 'idft', label: 'IDFT', maEnabled: false, maWindow: 50, logType: 'none' }
+export interface ProcessInfo {
+  key: 'dft' | 'idft'
+  label: string
+}
 
-export function usePlotProcess(type: 'dft' | 'idft') {
-  const [process, setProcess] = useState<ProcessParams>(getInitialProcessParams(type))
-  const { state: preProcessState } = usePreProcessControls(type)
+const PROCESS_INFO: Record<'dft' | 'idft', ProcessInfo> = {
+  dft: { key: 'dft', label: 'DFT' },
+  idft: { key: 'idft', label: 'IDFT' }
+} as const
 
-  const setMaEnabled = (v: boolean) => setProcess(s => ({ ...s, maEnabled: v }))
-  const setMaWindow = (v: number) => setProcess(s => ({ ...s, maWindow: v }))
-  const setLogType = (v: LogType) => setProcess(s => ({ ...s, logType: v }))
-
-  return {
-    process: {
-      ...process,
-      maEnabled: preProcessState.maEnabled,
-      maWindow: preProcessState.maWindow,
-      logType: preProcessState.logType
-    },
-    setMaEnabled,
-    setMaWindow,
-    setLogType,
-  }
+export function usePlotProcess(type: 'dft' | 'idft'): ProcessInfo {
+  return PROCESS_INFO[type]
 }

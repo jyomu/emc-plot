@@ -40,7 +40,7 @@ export function SParamPlot(props: { type: ProcessedTracesMode, title?: string, s
   const { state: postProcessState } = usePostProcessControls()
   const isProcessed = type === 'dft' || type === 'idft'
   const processType = isProcessed ? type : 'dft'
-  const process = usePlotProcess(processType)
+  const processInfo = usePlotProcess(processType)
   const traces = useProcessedTraces(type)
 
   const plotData: PartialPlotData[] = useMemo(() => {
@@ -66,7 +66,7 @@ export function SParamPlot(props: { type: ProcessedTracesMode, title?: string, s
       {isProcessed && (
         <>
           <div className="font-bold mb-1 flex items-center gap-2">
-            {process.process.label}
+            {processInfo.label}
             <PreprocessControls processType={processType} />
           </div>
         </>
