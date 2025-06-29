@@ -79,8 +79,9 @@ export const PlotSection: React.FC<PlotSectionProps> = (props) => {
             onLogTypeChange={(v: LogType) => setProcess(s => ({ ...s, logType: v }))}
           />
         </div>
-        <label style={{ display: 'block', margin: '8px 0' }}>
+        <label htmlFor="showHalfCheckbox" style={{ display: 'block', margin: '8px 0' }}>
           <input
+            id="showHalfCheckbox"
             type="checkbox"
             checked={showHalf}
             onChange={e => setShowHalf(e.target.checked)}
