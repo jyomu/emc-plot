@@ -40,23 +40,21 @@ export const PreprocessControls: React.FC<PreprocessControlsProps> = ({
         className="w-16 ml-2"
       />
     )}
-    {logType !== undefined && (
-      <label className="ml-4">
-        log関数:
-        <select
-          value={logType}
-          onChange={e => {
-            const v = e.target.value
-            if (v === 'log' || v === 'log10' || v === 'log2' || v === 'none') onLogTypeChange(v)
-          }}
-          className="ml-1"
-        >
-          <option value="log">log</option>
-          <option value="log10">log10</option>
-          <option value="log2">log2</option>
-          <option value="none">なし</option>
-        </select>
-      </label>
-    )}
+    <label className="ml-4">
+      log関数:
+      <select
+        value={logType}
+        onChange={e => {
+          const v = e.target.value
+          if (v === 'log' || v === 'log10' || v === 'log2' || v === 'none') onLogTypeChange(v)
+        }}
+        className="ml-1"
+      >
+        <option value="log">log</option>
+        <option value="log10">log10</option>
+        <option value="log2">log2</option>
+        <option value="none">なし</option>
+      </select>
+    </label>
   </>
 )
