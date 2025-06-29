@@ -13,5 +13,6 @@ export function useTraces() {
     }
   })
   const allTraces = queryClient.getQueryData<PartialPlotData[]>(['allTraces']) || []
-  return { allTraces, mutate: mutation.mutate, status: mutation.status }
+  const sParams = allTraces.map(t => typeof t.name === 'string' ? t.name : '').filter(Boolean)
+  return { allTraces, sParams, mutate: mutation.mutate, status: mutation.status }
 }
