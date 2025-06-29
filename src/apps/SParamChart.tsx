@@ -4,10 +4,12 @@
 // 依存スコープを最小化し、親子の結合を極力減らす
 
 import { useState } from 'react'
+import { useMutation } from '@tanstack/react-query'
 import type { PartialPlotData } from '../types/plot'
 import { SParamSelector } from '../components/app/SParamSelector'
 import { FileLoader } from '../components/app/FileLoader'
 import { PlotSection } from '../components/plot/PlotSection'
+import { parseTouchstone } from '../utils/parseTouchstone'
 
 function getSelectedSParamTraces(traces: PartialPlotData[], selected: string[]): PartialPlotData[] {
   return traces.filter(t => typeof t.name === 'string' && selected.includes(t.name))
@@ -24,15 +26,21 @@ function toggleSelected(selected: string[], value: string): string[] {
 }
 
 export function SParamChart() {
-  const [traces, setTraces] = useState<PartialPlotData[]>([])
+  // tracesの管理をuseMutationで置き換え
   const [selected, setSelected] = useState<string[]>([])
+  const mutation = useMutation({
+    mutationFn: async (file: File) => {
+      return await parseTouchstone(file)
+    }
+  })
+  const traces = mutation.data || []
   const selectedTraces = getSelectedSParamTraces(traces, selected)
 
   return (
     <div className="w-full mx-auto px-4 text-center">
       <h1>Touchstone Sパラメータプロッタ (nポート対応)</h1>
       <FileLoader
-        onLoad={setTraces}
+        onFileLoad={file => mutation.mutate(file)}
       />
       <div>
         <SParamSelector traces={traces} selected={selected} onChange={(s: string) => setSelected(prev => toggleSelected(prev, s))} />
