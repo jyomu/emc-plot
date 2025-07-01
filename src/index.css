@@ -11,18 +11,11 @@
     @apply rounded-md border border-transparent px-4 py-2 font-medium text-base bg-neutral-900 text-white cursor-pointer transition-colors shadow;
     background-color: #1a1a1a;
   }
-  button:hover, input[type="button"]:hover, input[type="submit"]:hover {
-    @apply bg-blue-600 border-blue-400;
-  }
-  button:focus, input[type="button"]:focus, input[type="submit"]:focus {
-    outline: 4px auto -webkit-focus-ring-color;
-    outline-offset: 2px;
-  }
   input[type="number"], input[type="text"], select, textarea {
-    @apply rounded border border-gray-300 px-2 py-1 text-base bg-white text-black focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition;
+    @apply rounded border border-gray-300 px-2 py-1 text-base bg-white text-black;
   }
   input[type="file"] {
-    @apply block text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-semibold file:bg-neutral-900 file:text-white hover:file:bg-blue-600;
+    @apply block text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded file:text-sm file:font-semibold file:bg-neutral-900 file:text-white;
   }
 }
 
