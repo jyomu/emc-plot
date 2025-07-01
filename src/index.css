@@ -4,9 +4,6 @@
   html {
     color-scheme: light dark;
   }
-  #root {
-    @apply p-4;
-  }
   h1 {
     @apply text-5xl;
   }
