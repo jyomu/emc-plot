@@ -6,9 +6,11 @@ function App() {
   const queryClient = new QueryClient()
   return (
     <QueryClientProvider client={queryClient}>
-      <Header />
-      <div className="flex-1 flex flex-col justify-center">
-        <SParamChart />
+      <div className="p-4">
+        <Header />
+        <div className="flex-1 flex flex-col justify-center">
+          <SParamChart />
+        </div>
       </div>
     </QueryClientProvider>
   )
