@@ -4,7 +4,7 @@ import { useSelectedSParams } from '../../hooks/state/useSelectedSParams'
 export function SParamSelector() {
   const { sParams } = useTraces()
   const { selectedSParams, toggleSelectedSParam } = useSelectedSParams()
-  console.log('SParamSelector sParams:', sParams)
+  
   return (
     <div style={{ margin: '12px 0' }}>
       <label>表示Sパラメータ: </label>
