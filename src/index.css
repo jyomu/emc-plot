@@ -24,9 +24,6 @@
   input[type="number"], input[type="text"], select, textarea {
     @apply rounded border border-gray-300 px-2 py-1 text-base bg-white text-black focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition;
   }
-  input[type="checkbox"] {
-    @apply align-middle;
-  }
   input[type="file"] {
     @apply block text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-semibold file:bg-neutral-900 file:text-white hover:file:bg-blue-600;
   }
