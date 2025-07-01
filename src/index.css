@@ -8,9 +8,7 @@
     @apply mx-auto p-4 text-center min-h-screen flex flex-col;
   }
   h1 {
-    font-size: 3.2em;
-    line-height: 1.1;
-    @apply text-5xl leading-tight;
+    @apply text-5xl;
   }
   button, input[type="button"], input[type="submit"] {
     @apply rounded-md border border-transparent px-4 py-2 font-medium text-base bg-neutral-900 text-white cursor-pointer transition-colors shadow;
