@@ -6,8 +6,8 @@
     line-height: 1.5;
     font-weight: 400;
     color-scheme: light dark;
-    color: rgba(255, 255, 255, 0.87);
-    background-color: #242424;
+    color: white;
+    background-color: black;
     font-synthesis: none;
     text-rendering: optimizeLegibility;
     -webkit-font-smoothing: antialiased;
@@ -23,12 +23,12 @@
   }
   a {
     font-weight: 500;
-    color: #646cff;
+    color: blue;
     text-decoration: inherit;
     @apply font-medium no-underline transition-colors;
   }
   a:hover {
-    color: #535bf2;
+    color: blue;
     @apply text-blue-300 underline;
   }
   h1 {
@@ -60,11 +60,11 @@
 
 @media (prefers-color-scheme: light) {
   html {
-    color: #213547;
-    background-color: #ffffff;
+    color: black;
+    background-color: white;
   }
   a:hover {
-    color: #747bff;
+    color: blue;
   }
   /* === Light mode: button & file upload button unified === */
   button,
@@ -72,9 +72,9 @@
   input[type="submit"],
   input[type="file"]::-webkit-file-upload-button,
   input[type="file"]::file-selector_button {
-    background-color: #f9f9f9;
-    color: #213547;
-    border: 1px solid #d1d5db;
+    background-color: white;
+    color: black;
+    border: 1px solid lightgray;
     border-radius: 0.375rem;
     padding: 0.5rem 1rem;
     font-weight: 500;
@@ -86,11 +86,11 @@
   input[type="submit"]:hover,
   input[type="file"]:hover::-webkit-file-upload-button,
   input[type="file"]:hover::file-selector-button {
-    background-color: #3b82f6;
-    color: #ffffff;
-    border-color: #2563eb;
+    background-color: blue;
+    color: white;
+    border-color: blue;
   }
   input[type="file"] {
-    color: #374151;
+    color: gray;
   }
 }
