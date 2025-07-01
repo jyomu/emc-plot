@@ -66,7 +66,28 @@
   a:hover {
     color: #747bff;
   }
-  button {
+  button, input[type="button"], input[type="submit"] {
     background-color: #f9f9f9;
+    color: #213547;
+    border-color: #d1d5db;
+  }
+  button:hover, input[type="button"]:hover, input[type="submit"]:hover {
+    background-color: #3b82f6;
+    color: #ffffff;
+    border-color: #2563eb;
+  }
+  input[type="file"] {
+    color: #374151;
+  }
+  input[type="file"]::-webkit-file-upload-button,
+  input[type="file"]::file-selector-button {
+    background-color: #f9f9f9;
+    color: #213547;
+    border-color: #d1d5db;
+  }
+  input[type="file"]:hover::-webkit-file-upload-button,
+  input[type="file"]:hover::file-selector-button {
+    background-color: #3b82f6;
+    color: #ffffff;
   }
 }
