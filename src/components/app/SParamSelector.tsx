@@ -1,7 +1,10 @@
-import type { PartialPlotData } from '../../types/plot'
+import { useTraces } from '../../hooks/data/useTraces'
+import { useSelectedSParams } from '../../hooks/state/useSelectedSParams'
 
-export function SParamSelector({ traces, selected, onChange }: { traces: PartialPlotData[]; selected: string[]; onChange: (s: string) => void }) {
-  const sParams = traces.map(t => typeof t.name === 'string' ? t.name : '').filter(Boolean)
+export function SParamSelector() {
+  const { sParams } = useTraces()
+  const { selectedSParams, toggleSelectedSParam } = useSelectedSParams()
+  
   return (
     <div style={{ margin: '12px 0' }}>
       <label>表示Sパラメータ: </label>
@@ -9,8 +12,8 @@ export function SParamSelector({ traces, selected, onChange }: { traces: Partial
         <label key={s} style={{ marginRight: 8 }}>
           <input
             type="checkbox"
-            checked={selected.includes(s)}
-            onChange={() => onChange(s)}
+            checked={selectedSParams.includes(s)}
+            onChange={() => toggleSelectedSParam(s)}
           />
           {s}
         </label>
